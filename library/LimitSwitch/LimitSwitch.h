@@ -30,8 +30,8 @@ class LimitSwitch {
 
   private:
 
-    int pin;		//the step signal pin.
-    bool state;		//the step signal pin.
+    int pin;		//the switch state pin.
+    bool state;		//the state of the switch on last read.
 };
 
 #endif
