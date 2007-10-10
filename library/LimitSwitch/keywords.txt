@@ -1,0 +1,33 @@
+#######################################
+# Syntax Coloring Map For Test
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+RepStepper	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+setSpeed	KEYWORD2
+setTarget	KEYWORD2
+setDirection	KEYWORD2
+step	KEYWORD2
+canStep	KEYWORD2
+version	KEYWORD2
+
+
+######################################
+# Instances (KEYWORD2)
+#######################################
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+RS_FORWARD	LITERAL1
+RS_REVERSE	LITERAL1
