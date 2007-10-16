@@ -1,79 +1,41 @@
 /******************
 * Get our libraries
 ******************/
-#include <RepStepper.h>
+#include <CartesianBot.h>
+#include <ThermoplastExtruder.h>
 
-// library interface description
-struct Point {
-	int x;
-	int y;
-	int z;
-};
-
-/******************
-*  Definitions
-******************/
-#define POINT_QUEUE_SIZE 64
-
-/****************************
+/********************************
 * digital i/o pin assignment
-****************************/
-
-//these are our stepper pins
+********************************/
+#define X_HOME_PIN 2
+#define Y_HOME_PIN 3
+#define EXTRUDER_MOTOR_DIR_PIN 4
+#define EXTRUDER_MOTOR_SPEED_PIN 5
+#define EXTRUDER_HEATER_PIN 6
 #define X_DIR_PIN 7
 #define X_STEP_PIN 8
 #define Y_DIR_PIN 9
 #define Y_STEP_PIN 10
+#define Z_HOME_PIN 11
 #define Z_DIR_PIN 12
 #define Z_STEP_PIN 13
 
-//pins for our limit switches
-#define X_HOME_PIN 2
-#define Y_HOME_PIN 3
-#define Z_HOME_PIN 11
-
-//for our extruder
-#define EXTRUDER_MOTOR_DIR_PIN 4
-#define EXTRUDER_MOTOR_SPEED_PIN 5
-#define EXTRUDER_HEATER_PIN 6
-
-/******************
-* analog inputs
-******************/
+/********************************
+* analog input pin assignments
+********************************/
 #define EXTRUDER_THERMISTOR_PIN 0
 #define X_ENCODER_PIN 1
 #define Y_ENCODER_PIN 2
 #define Z_ENCODER_PIN 3
 #define EXTRUDER_MOTOR_ENCODER_PIN 4
 
-//our analog sensor values.
-int thermistor_reading = 0;
-int x_encoder_reading = 0;
-int y_encoder_reading = 0;
-int z_encoder_reading = 0;
-int extruder_motor_encoder_reading = 0;
+/********************************
+*  Global variable declarations
+********************************/
 
-//our endstop variables
-bool x_at_home = 0;
-bool y_at_home = 0;
-bool z_at_home = 0;
-
-//our extruder info
-bool extruder_direction = HIGH;
-byte extruder_speed = 0;
-byte extruder_heater_pwm = 0;
-byte target_thermistor_value = 0;
-
-//this is for tracking to a point.
-byte point_index = 0;
-Point point_queue[POINT_QUEUE_SIZE];
-Point target_point;
-Point current_position;
-
-//here are our stepper objects
-RepStepper x_stepper(200, X_DIR_PIN, X_STEP_PIN);
-RepStepper y_stepper(200, Y_DIR_PIN, Y_STEP_PIN);
-RepStepper z_stepper(200, Z_DIR_PIN, Z_STEP_PIN);
+//our main objects
+CartesianBot bot();
+ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_THERMISTOR_PIN);
 
 void setup()
 {
@@ -81,22 +43,26 @@ void setup()
 	Serial.begin(57600);
 	Serial.println("RepDuino v1.0 started up.");
 
-	//these inputs are our limit switches
-	pinMode(X_HOME_PIN, INPUT);
-	pinMode(Y_HOME_PIN, INPUT);
-	pinMode(Z_HOME_PIN, INPUT);
-	
-	//these outputs control our extruder
-	pinMode(EXTRUDER_MOTOR_DIR_PIN, OUTPUT);
-	pinMode(EXTRUDER_MOTOR_SPEED_PIN, OUTPUT);
-	pinMode(EXTRUDER_HEATER_PIN, OUTPUT);	
-}
+	//add our stepper motors in.
+	bot.addStepper('x', 200, X_DIR_PIN, X_STEP_PIN);
+	bot.addStepper('y', 200, Y_DIR_PIN, Y_STEP_PIN);
+	bot.addStepper('z', 200, Z_DIR_PIN, Z_STEP_PIN);
 
+	//also, our home switches.
+	bot.addHomeSwitch('x', X_HOME_PIN);
+	bot.addHomeSwitch('y', Y_HOME_PIN);
+	bot.addHomeSwitch('z', Z_HOME_PIN);
+
+	//what about our encoders?
+	bot.addEncoder('x', X_ENCODER_PIN);
+	bot.addEncoder('y', Y_ENCODER_PIN);
+	bot.addEncoder('z', Z_ENCODER_PIN);
+}
 
 void loop()
 {
 	receiveCommands();
-	readSensors();
+	readState();
 	updateStatus();
 	executeCommands();
 }
@@ -120,7 +86,7 @@ void receiveCommands()
 			abortPrint();
 		//set our heater temperature
 		else if (incoming == 'D')
-			readExtruderTemperature();
+			extruder.setTargetTemp(Serial.read());
 		//take me home, country roads!
 		else if (incoming == 'E')
 			goHome();
@@ -136,19 +102,10 @@ void receiveCommands()
 	}
 }
 
-void readSensors()
+void readState()
 {
-	//just read in all our sensor data... make it easy.
-	thermistor_reading = analogRead(EXTRUDER_THERMISTOR_PIN);
-	x_encoder_reading = analogRead(X_ENCODER_PIN);
-	y_encoder_reading = analogRead(Y_ENCODER_PIN);
-	z_encoder_reading = analogRead(Z_ENCODER_PIN);
-	extruder_motor_encoder_reading = analogRead(EXTRUDER_MOTOR_ENCODER_PIN);
-	
-	//also check our endstops as well
-	x_at_home = digitalRead(X_HOME_PIN);
-	y_at_home = digitalRead(Y_HOME_PIN);
-	z_at_home = digitalRead(Z_HOME_PIN);
+	extruder.readState();
+	bot.readState();
 }
 
 void updateStatus()
@@ -208,38 +165,8 @@ void updateStatus()
 
 void executeCommands()
 {
-	checkExtruder();
-	checkCartesianBot();
-}
-
-void checkExtruder()
-{
-	//set the direction of our extruder
-	if (extruder_direction)
-		digitalWrite(EXTRUDER_MOTOR_DIR_PIN, HIGH);
-	else
-		digitalWrite(EXTRUDER_MOTOR_DIR_PIN, LOW);
-
-	//set the speed of our motor
-	analogWrite(EXTRUDER_MOTOR_SPEED_PIN, extruder_speed);
-
-	//check our temp.
-	checkThermostat();
-}
-
-void checkThermostat()
-{
-	extruder_heater_pwm = calculateHeaterPWM();
-	
-	analogWrite(EXTRUDER_HEATER_PIN, extruder_heater_pwm);
-}
-
-byte calculateHeaterPWM()
-{
-	if (thermistor_reading < target_thermistor_value)
-		return 255;
-	else
-		return 0;
+	extruder.manageTemp();
+	cartesianbot.move();
 }
 
 struct Point unqueuePoint()
@@ -329,18 +256,8 @@ int readInt()
 
 void abortPrint()
 {
-	//set temp to 0
-	//turn off all motors
-}
-
-void readExtruderTemperature()
-{
-	setExtruderTargetTemperature(Serial.read());
-}
-
-void setExtruderTargetTemperature(byte temp)
-{
-	target_thermistor_value = temp;
+	extruder.abort();
+	cartesianbot.abort();
 }
 
 void goHome()
@@ -355,16 +272,6 @@ void goHome()
 
 void readExtruderSettings()
 {
-	setExtruderDirection(Serial.read());
-	setExtruderSpeed(Serial.read());
-}
-
-void setExtruderDirection(bool dir)
-{
-	extruder_direction = dir;
-}
-
-void setExtruderSpeed(byte speed)
-{
-	extruder_speed = speed;	
+	extruder.setDirection(Serial.read());
+	extruder.setSpeed(Serial.read());
 }
