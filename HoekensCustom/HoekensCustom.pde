@@ -9,14 +9,14 @@
 ********************************/
 #define X_HOME_PIN 2
 #define Y_HOME_PIN 3
-#define EXTRUDER_MOTOR_DIR_PIN 4
+#define Z_HOME_PIN 4
 #define EXTRUDER_MOTOR_SPEED_PIN 5
 #define EXTRUDER_HEATER_PIN 6
-#define X_DIR_PIN 7
-#define X_STEP_PIN 8
-#define Y_DIR_PIN 9
-#define Y_STEP_PIN 10
-#define Z_HOME_PIN 11
+#define EXTRUDER_MOTOR_DIR_PIN 7
+#define X_DIR_PIN 8
+#define X_STEP_PIN 9
+#define Y_DIR_PIN 10
+#define Y_STEP_PIN 11
 #define Z_DIR_PIN 12
 #define Z_STEP_PIN 13
 
@@ -30,6 +30,34 @@
 #define EXTRUDER_MOTOR_ENCODER_PIN 4
 
 /********************************
+* command declarations
+********************************/
+
+// generic version command
+#define CMD_VERSION   				0  // asks us for our version #
+
+//cartesian bot specific commands
+#define CMD_QUEUE_POINT				1  // asks us to queue a point up
+#define CMD_SET_POS					2  // asks us to set our position to this point
+#define CMD_GET_POS					3  // asks us to tell our position
+#define CMD_SEEK					4  // asks us to go into seek mode (move to points)
+#define CMD_PAUSE					5  // asks us to pause operation (pause seeking, extruding)
+#define CMD_ABORT					6  // asks us to abort printing operations (stop all operations, go home)
+#define CMD_HOME					7  // asks us to go home and reset (just go home)
+#define CMD_SET_RPM					8  // asks us to set the speed for a specific axis
+#define CMD_GET_RPM					9  // asks us to get the speed of a specific axis
+#define CMD_GET_LIMIT_STATUS		10  // asks for our limit switch status
+
+// extruder specific commands
+#define CMD_SET_TEMP				11 // asks us to set our temp target (pre conversion)
+#define CMD_GET_TEMP				12 // asks us for our current temperature (pre conversion)
+#define CMD_EXTRUDER_SET_DIRECTION	13 // asks us to set our extruder's direction
+#define CMD_EXTRUDER_GET_DIRECTION	14 // asks us to get our extruder's direction
+#define CMD_EXTRUDER_SET_SPEED		15 // asks us to set our extruder's speed
+#define CMD_EXTRUDER_GET_SPEED		16 // asks us to get our extruder's speed
+#define CMD_GET_ALL_STATUS			17 // asks us for our global status
+
+/********************************
 *  Global variable declarations
 ********************************/
 
@@ -40,7 +68,7 @@ ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, E
 void setup()
 {
 	//fire up our serial comms.
-	Serial.begin(57600);
+	Serial.begin(19200);
 	Serial.println("RepDuino v1.0 started up.");
 
 	//add our stepper motors in.
@@ -69,11 +97,11 @@ void loop()
 
 void receiveCommands()
 {
-	int incoming;
+	int command;
 	
 	while (Serial.available() > 1)
 	{
-		incoming = Serial.read();
+		command = Serial.read();
 		
 		//get our version
 		if (incoming == 'A')
