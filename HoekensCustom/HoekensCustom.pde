@@ -4,6 +4,9 @@
 #include <CartesianBot.h>
 #include <ThermoplastExtruder.h>
 
+//the version of our software
+#define VERSION 1
+
 /********************************
 * digital i/o pin assignment
 ********************************/
@@ -23,7 +26,7 @@
 /********************************
 * analog input pin assignments
 ********************************/
-#define EXTRUDER_THERMISTOR_PIN 0
+define EXTRUDER_THERMISTOR_PIN 0
 #define X_ENCODER_PIN 1
 #define Y_ENCODER_PIN 2
 #define Z_ENCODER_PIN 3
@@ -38,24 +41,31 @@
 
 //cartesian bot specific commands
 #define CMD_QUEUE_POINT				1  // asks us to queue a point up
-#define CMD_SET_POS					2  // asks us to set our position to this point
-#define CMD_GET_POS					3  // asks us to tell our position
-#define CMD_SEEK					4  // asks us to go into seek mode (move to points)
-#define CMD_PAUSE					5  // asks us to pause operation (pause seeking, extruding)
-#define CMD_ABORT					6  // asks us to abort printing operations (stop all operations, go home)
-#define CMD_HOME					7  // asks us to go home and reset (just go home)
-#define CMD_SET_RPM					8  // asks us to set the speed for a specific axis
-#define CMD_GET_RPM					9  // asks us to get the speed of a specific axis
-#define CMD_GET_LIMIT_STATUS		10  // asks for our limit switch status
+#define CMD_CLEAR_QUEUE				2  // asks us to clear our queue
+#define CMD_GET_QUEUE				3  // asks us to report our queue
+#define CMD_SET_POS					4  // asks us to set our position to this point
+#define CMD_GET_POS					5  // asks us to tell our position
+#define CMD_SEEK					6  // asks us to go into seek mode (move to points)
+#define CMD_PAUSE					7  // asks us to pause operation (pause seeking, extruding)
+#define CMD_ABORT					8  // asks us to abort printing operations (stop all operations, go home)
+#define CMD_HOME					9  // asks us to go home and reset (just go home)
+#define CMD_SET_RPM					10 // asks us to set the speed for a specific axis
+#define CMD_GET_RPM					11  // asks us to get the speed of a specific axis
+#define CMD_GET_LIMIT_STATUS		12 // asks for our limit switch status
+#define CMD_CLEAR_QUEUE				13 // asks us to clear our queue
 
 // extruder specific commands
-#define CMD_SET_TEMP				11 // asks us to set our temp target (pre conversion)
-#define CMD_GET_TEMP				12 // asks us for our current temperature (pre conversion)
-#define CMD_EXTRUDER_SET_DIRECTION	13 // asks us to set our extruder's direction
-#define CMD_EXTRUDER_GET_DIRECTION	14 // asks us to get our extruder's direction
-#define CMD_EXTRUDER_SET_SPEED		15 // asks us to set our extruder's speed
-#define CMD_EXTRUDER_GET_SPEED		16 // asks us to get our extruder's speed
-#define CMD_GET_ALL_STATUS			17 // asks us for our global status
+#define CMD_SET_TEMP				14 // asks us to set our temp target (pre conversion)
+#define CMD_GET_TEMP				15 // asks us for our current temperature (pre conversion)
+#define CMD_EXTRUDER_SET_DIRECTION	16 // asks us to set our extruder's direction
+#define CMD_EXTRUDER_GET_DIRECTION	17 // asks us to get our extruder's direction
+#define CMD_EXTRUDER_SET_SPEED		18 // asks us to set our extruder's speed
+#define CMD_EXTRUDER_GET_SPEED		19 // asks us to get our extruder's speed
+#define CMD_GET_ALL_STATUS			20 // asks us for our global status
+
+// our true/false values
+#define CMD_REPLY_NAK 0
+#define CMD_REPLY_ACK 1
 
 /********************************
 *  Global variable declarations
@@ -82,16 +92,15 @@ void setup()
 	bot.addHomeSwitch('z', Z_HOME_PIN);
 
 	//what about our encoders?
-	bot.addEncoder('x', X_ENCODER_PIN);
-	bot.addEncoder('y', Y_ENCODER_PIN);
-	bot.addEncoder('z', Z_ENCODER_PIN);
+//	bot.addEncoder('x', X_ENCODER_PIN);
+//	bot.addEncoder('y', Y_ENCODER_PIN);
+//	bot.addEncoder('z', Z_ENCODER_PIN);
 }
 
 void loop()
 {
 	receiveCommands();
 	readState();
-	updateStatus();
 	executeCommands();
 }
 
@@ -102,7 +111,89 @@ void receiveCommands()
 	while (Serial.available() > 1)
 	{
 		command = Serial.read();
+
+#define CMD_HOME					9  // asks us to go home and reset (just go home)
+#define CMD_SET_RPM					10 // asks us to set the speed for a specific axis
+#define CMD_GET_RPM					11  // asks us to get the speed of a specific axis
+#define CMD_GET_LIMIT_STATUS		12 // asks for our limit switch status
+#define CMD_CLEAR_QUEUE				13 // asks us to clear our queue
+
+// extruder specific commands
+#define CMD_SET_TEMP				14 // asks us to set our temp target (pre conversion)
+#define CMD_GET_TEMP				15 // asks us for our current temperature (pre conversion)
+#define CMD_EXTRUDER_SET_DIRECTION	16 // asks us to set our extruder's direction
+#define CMD_EXTRUDER_GET_DIRECTION	17 // asks us to get our extruder's direction
+#define CMD_EXTRUDER_SET_SPEED		18 // asks us to set our extruder's speed
+#define CMD_EXTRUDER_GET_SPEED		19 // asks us to get our extruder's speed
+#define CMD_GET_ALL_STATUS			20 // asks us for our global status
 		
+		switch (command)
+		{
+			//start our reply.
+			sendReply(command);
+
+			case CMD_VERSION:
+				Serial.print(VERSION);
+			break;
+
+			case CMD_QUEUE_POINT:
+				Point point;
+				point.x = readInt();
+				point.y = readInt();
+				point.z = readInt();
+				
+				bot.queuePoint(point);
+			break;
+
+			case CMD_CLEAR_QUEUE:
+				bot.clearQueue();
+			break;
+
+			case CMD_GET_QUEUE:
+				bot.printQueue();
+			break;
+
+			case CMD_SET_POS:
+				Point point;
+				
+				bot.current_position.x = readInt();
+				bot.current_position.y = readInt();
+				bot.current_position.z = readInt();
+			break;
+
+			case CMD_GET_POS:
+				Serial.print(bot.current_position.x);
+				Serial.print(bot.current_position.y);
+				Serial.print(bot.current_position.z);
+			break;
+
+			case CMD_SEEK:
+				bot.start()
+			break;
+
+			case CMD_PAUSE:
+				bot.stop()
+			break;
+
+			case CMD_ABORT:
+				extruder.abort();
+				extruder.abort();
+			break;
+
+			case CMD_HOME:
+				bot.home();
+			break;
+
+			case CMD_QUEUE_POINT:
+				queuePoint()
+			break;
+
+			case CMD_QUEUE_POINT:
+				queuePoint()
+			break;
+
+		
+		}
 		//get our version
 		if (incoming == 'A')
 			printVersion();
