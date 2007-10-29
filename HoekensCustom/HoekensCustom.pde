@@ -26,7 +26,7 @@
 /********************************
 * analog input pin assignments
 ********************************/
-define EXTRUDER_THERMISTOR_PIN 0
+#define EXTRUDER_THERMISTOR_PIN 0
 #define X_ENCODER_PIN 1
 #define Y_ENCODER_PIN 2
 #define Z_ENCODER_PIN 3
@@ -38,30 +38,33 @@ define EXTRUDER_THERMISTOR_PIN 0
 
 // generic version command
 #define CMD_VERSION   				0  // asks us for our version #
+#define CMD_GET_ALL_STATUS			1 // asks us for our global status
 
 //cartesian bot specific commands
-#define CMD_QUEUE_POINT				1  // asks us to queue a point up
-#define CMD_CLEAR_QUEUE				2  // asks us to clear our queue
-#define CMD_GET_QUEUE				3  // asks us to report our queue
-#define CMD_SET_POS					4  // asks us to set our position to this point
-#define CMD_GET_POS					5  // asks us to tell our position
-#define CMD_SEEK					6  // asks us to go into seek mode (move to points)
-#define CMD_PAUSE					7  // asks us to pause operation (pause seeking, extruding)
-#define CMD_ABORT					8  // asks us to abort printing operations (stop all operations, go home)
-#define CMD_HOME					9  // asks us to go home and reset (just go home)
-#define CMD_SET_RPM					10 // asks us to set the speed for a specific axis
-#define CMD_GET_RPM					11  // asks us to get the speed of a specific axis
-#define CMD_GET_LIMIT_STATUS		12 // asks for our limit switch status
-#define CMD_CLEAR_QUEUE				13 // asks us to clear our queue
+#define CMD_QUEUE_POINT				51  // asks us to queue a point up
+#define CMD_CLEAR_QUEUE				52  // asks us to clear our queue
+#define CMD_GET_QUEUE				53  // asks us to report our queue
+#define CMD_SET_POS					54  // asks us to set our position to this point
+#define CMD_GET_POS					55  // asks us to tell our position
+#define CMD_SEEK					56  // asks us to go into seek mode (move to points)
+#define CMD_PAUSE					57  // asks us to pause operation (pause seeking, extruding)
+#define CMD_ABORT					58  // asks us to abort printing operations (stop all operations, go home)
+#define CMD_HOME					59  // asks us to go home and reset (just go home)
+#define CMD_SET_RPM					60 // asks us to set the speed for a specific axis
+#define CMD_GET_RPM					61 // asks us to get the speed of a specific axis
+#define CMD_SET_SPEED				62 // asks us to set the speed of a specific axis (in microseconds between steps)
+#define CMD_GET_SPEED				63 // asks us to set the speed of a specific axis (in microseconds between steps)
+#define CMD_GET_LIMIT_STATUS		64 // asks for our limit switch status
+#define CMD_SET_STEPS				65 // sets the number of steps per revoltion for a specific axis
+#define CMD_GET_STEPS				66 // gets the number of steps per revoltion for a specific axis
 
 // extruder specific commands
-#define CMD_SET_TEMP				14 // asks us to set our temp target (pre conversion)
-#define CMD_GET_TEMP				15 // asks us for our current temperature (pre conversion)
-#define CMD_EXTRUDER_SET_DIRECTION	16 // asks us to set our extruder's direction
-#define CMD_EXTRUDER_GET_DIRECTION	17 // asks us to get our extruder's direction
-#define CMD_EXTRUDER_SET_SPEED		18 // asks us to set our extruder's speed
-#define CMD_EXTRUDER_GET_SPEED		19 // asks us to get our extruder's speed
-#define CMD_GET_ALL_STATUS			20 // asks us for our global status
+#define CMD_SET_TEMP				100 // asks us to set our temp target (pre conversion)
+#define CMD_GET_TEMP				101 // asks us for our current temperature (pre conversion)
+#define CMD_EXTRUDER_SET_DIRECTION	102 // asks us to set our extruder's direction
+#define CMD_EXTRUDER_GET_DIRECTION	103 // asks us to get our extruder's direction
+#define CMD_EXTRUDER_SET_SPEED		104 // asks us to set our extruder's speed
+#define CMD_EXTRUDER_GET_SPEED		105 // asks us to get our extruder's speed
 
 // our true/false values
 #define CMD_REPLY_NAK 0
@@ -81,6 +84,7 @@ void setup()
 	Serial.begin(19200);
 	Serial.println("RepDuino v1.0 started up.");
 
+/*
 	//add our stepper motors in.
 	bot.addStepper('x', 200, X_DIR_PIN, X_STEP_PIN);
 	bot.addStepper('y', 200, Y_DIR_PIN, Y_STEP_PIN);
@@ -95,13 +99,20 @@ void setup()
 //	bot.addEncoder('x', X_ENCODER_PIN);
 //	bot.addEncoder('y', Y_ENCODER_PIN);
 //	bot.addEncoder('z', Z_ENCODER_PIN);
+*/
 }
 
 void loop()
 {
-	receiveCommands();
 	readState();
+	receiveCommands();
 	executeCommands();
+}
+
+void readState()
+{
+	extruder.readState();
+	bot.readState();
 }
 
 void receiveCommands()
@@ -111,127 +122,91 @@ void receiveCommands()
 	while (Serial.available() > 1)
 	{
 		command = Serial.read();
-
-#define CMD_HOME					9  // asks us to go home and reset (just go home)
-#define CMD_SET_RPM					10 // asks us to set the speed for a specific axis
-#define CMD_GET_RPM					11  // asks us to get the speed of a specific axis
-#define CMD_GET_LIMIT_STATUS		12 // asks for our limit switch status
-#define CMD_CLEAR_QUEUE				13 // asks us to clear our queue
-
-// extruder specific commands
-#define CMD_SET_TEMP				14 // asks us to set our temp target (pre conversion)
-#define CMD_GET_TEMP				15 // asks us for our current temperature (pre conversion)
-#define CMD_EXTRUDER_SET_DIRECTION	16 // asks us to set our extruder's direction
-#define CMD_EXTRUDER_GET_DIRECTION	17 // asks us to get our extruder's direction
-#define CMD_EXTRUDER_SET_SPEED		18 // asks us to set our extruder's speed
-#define CMD_EXTRUDER_GET_SPEED		19 // asks us to get our extruder's speed
-#define CMD_GET_ALL_STATUS			20 // asks us for our global status
 		
-		switch (command)
-		{
-			//start our reply.
-			sendReply(command);
-
-			case CMD_VERSION:
-				Serial.print(VERSION);
-			break;
-
-			case CMD_QUEUE_POINT:
-				Point point;
-				point.x = readInt();
-				point.y = readInt();
-				point.z = readInt();
-				
-				bot.queuePoint(point);
-			break;
-
-			case CMD_CLEAR_QUEUE:
-				bot.clearQueue();
-			break;
-
-			case CMD_GET_QUEUE:
-				bot.printQueue();
-			break;
-
-			case CMD_SET_POS:
-				Point point;
-				
-				bot.current_position.x = readInt();
-				bot.current_position.y = readInt();
-				bot.current_position.z = readInt();
-			break;
-
-			case CMD_GET_POS:
-				Serial.print(bot.current_position.x);
-				Serial.print(bot.current_position.y);
-				Serial.print(bot.current_position.z);
-			break;
-
-			case CMD_SEEK:
-				bot.start()
-			break;
-
-			case CMD_PAUSE:
-				bot.stop()
-			break;
-
-			case CMD_ABORT:
-				extruder.abort();
-				extruder.abort();
-			break;
-
-			case CMD_HOME:
-				bot.home();
-			break;
-
-			case CMD_QUEUE_POINT:
-				queuePoint()
-			break;
-
-			case CMD_QUEUE_POINT:
-				queuePoint()
-			break;
-
+		//start our reply.
+		beginReply(command);
 		
-		}
-		//get our version
-		if (incoming == 'A')
-			printVersion();
-		//queue point
-		else if (incoming == 'B')
-			queuePoint();
-		//abort our print!
-		else if (incoming == 'C')
-			abortPrint();
-		//set our heater temperature
-		else if (incoming == 'D')
-			extruder.setTargetTemp(Serial.read());
-		//take me home, country roads!
-		else if (incoming == 'E')
-			goHome();
-		//set our extruder speed
-		else if (incoming == 'F')
-			readExtruderSettings();
-		//what did you say to me?!?
-		else
+		//did we get a valid command?
+		if (cmd >= 0)
 		{
-			Serial.print("Command not understood: ");
-			Serial.println(incoming);
+			//these are basically just global commands
+			if (cmd == CMD_VERSION)
+				cmd_version();
+			else if (cmd == CMD_GET_ALL_STATUS)
+				cmd_get_all_status();
+			//these are for our cartesian bot.
+			else if (cmd == CMD_QUEUE_POINT)
+				cmd_queue_point();
+			else if (cmd == CMD_CLEAR_QUEUE)
+				cmd_clear_queue();
+			else if (cmd == CMD_GET_QUEUE)
+				cmd_get_queue();
+			else if (cmd == CMD_SET_POS)
+				cmd_set_pos();
+			else if (cmd == CMD_GET_POS)
+				cmd_get_pos();
+			else if (cmd == CMD_SEEK)
+				cmd_seek();
+			else if (cmd == CMD_PAUSE)
+				cmd_pause();
+			else if (cmd == CMD_ABORT)
+				cmd_abort();
+			else if (cmd == CMD_HOME)
+				cmd_home();
+			else if (cmd == CMD_SET_RPM)
+				cmd_set_rpm();
+			else if (cmd == CMD_GET_RPM)
+				cmd_get_rpm();
+			else if (cmd == CMD_SET_SPEED)
+				cmd_set_speed();
+			else if (cmd == CMD_GET_SPEED)
+				cmd_get_speed();
+			else if (cmd == CMD_GET_LIMIT_STATUS)
+				cmd_get_limit_status();
+			else if (cmd == CMD_SET_STEPS)
+				cmd_set_steps();
+			else if (cmd == CMD_GET_STEPS)
+				cmd_get_steps();
+			//okay, these are for our extruder.
+			else if (cmd == CMD_SET_TEMP)
+				cmd_set_temp();
+			else if (cmd == CMD_GET_TEMP)
+				cmd_get_temp();
+			else if (cmd == CMD_EXTRUDER_SET_DIRECTION)
+				cmd_extruder_set_direction();
+			else if (cmd == CMD_EXTRUDER_GET_DIRECTION)
+				cmd_extruder_get_direction();
+			else if (cmd == CMD_EXTRUDER_SET_SPEED)
+				cmd_extruder_set_speed();
+			else if (cmd == CMD_EXTRUDER_GET_SPEED)
+				cmd_extruder_get_speed();
+			//we didnt get any valid commands???
+			else
+				nak();
 		}
+		
+		endReply();
 	}
 }
 
-void readState()
+void executeCommands()
 {
-	extruder.readState();
-	bot.readState();
+	extruder.manageTemp();
+	bot.move();
 }
 
-void updateStatus()
-{
-	//let them know its our status line.
-	//Serial.print('Status:');
+/**********************************************
+*  These are our command handling functions. 
+**********************************************/
 
+void cmd_version()
+{
+	Serial.print(VERSION);
+	ack();
+}
+
+void cmd_get_all_status()
+{
 /*	
 	//our analog readings.
 	Serial.print("T:");
@@ -278,88 +253,248 @@ void updateStatus()
 	Serial.print(extruder_heater_pwm);
 	Serial.print();
 */	
-	//end our data transmission
-	Serial.println('!');
+	ack();
 }
 
-void executeCommands()
+void cmd_queue_point()
 {
-	extruder.manageTemp();
-	cartesianbot.move();
-}
-
-struct Point unqueuePoint()
-{
-	Point temp;
+	Point point;
 	
-	//get our first point.
-	temp = point_queue[0];
+	point.x = readInt();
+	point.y = readInt();
+	point.z = readInt();
 	
-	//shift the array down now.
-	for (int i=0; i<point_index-1; i++)
-		point_queue[i] = point_queue[i+1];
-	point_index++;
-	
-	//send it!
-	return temp;
-}
-
-void checkCartesianBot()
-{
-	//if we're at our point, get a new one!
-	if (atPoint(target_point))
-	{
-		//if we have any points left, get one!
-		if (point_index > 0)
-			target_point = unqueuePoint();
-		else
-			return;
-	}
-
-	//okay, now step to this!
-	stepToPoint(target_point);
-}
-
-bool atPoint(struct Point &target)
-{
-	if (target.x == current_position.x && target.y == current_position.y && target.z == current_position.z)
-		return true;
+	if (bot.queuePoint(point))
+		ack();
 	else
-		return false;
+		nak();
 }
 
-void stepToPoint(struct Point &target)
+void cmd_clear_queue()
 {
-	if (target.x != current_position.x)
-		x_stepper.step();
+	bot.clearQueue();
+	ack();
+}
+
+void cmd_get_queue()
+{
+	bot.printQueue();
+	ack();
+}
+
+void cmd_set_pos()
+{
+	bot.current_position.x = readInt();
+	bot.current_position.y = readInt();
+	bot.current_position.z = readInt();
+}
+
+void cmd_get_pos()
+{
+	Serial.print(bot.current_position.x);
+	Serial.print(bot.current_position.y);
+	Serial.print(bot.current_position.z);
+}
+
+void cmd_seek()
+{
+	bot.start();
+	ack();
+}
+
+void cmd_pause()
+{
+	bot.stop();
+	ack();
+}
+
+void cmd_abort()
+{
+	extruder.abort();
+	extruder.abort();
+	ack();
+}
+
+void cmd_home()
+{
+	bot.home();
+	ack();
+}
+
+void cmd_set_rpm()
+{
+	char axis = Serial.read();
+	byte speed = Serial.read();
 	
-	if (target.y != current_position.y)
-		y_stepper.step();
-		
-	if (target.z != current_position.z)
-		z_stepper.step();
-}
-
-void printVersion()
-{
-	Serial.println("RepDuino v1.0");
-}
-
-void queuePoint()
-{
-	if(point_index < (POINT_QUEUE_SIZE - 1))
+	if (axis == 'a')
 	{
-		//read in our points.
-		point_queue[point_index].x = readInt();
-		point_queue[point_index].y = readInt();
-		point_queue[point_index].z = readInt();
-		
-		//move our pointer forward.
-		point_index++;
+		bot.x.setRPM(speed);
+		bot.y.setRPM(speed);
+		bot.z.setRPM(speed);					
 	}
-	else
-		Serial.println("Point queue is full!");
+	else if (axis == 'x')
+		bot.x.setRPM(speed);
+	else if (axis == 'y')
+		bot.y.setRPM(speed);
+	else if (axis == 'z')
+		bot.z.setRPM(speed);
 }
+
+void cmd_get_rpm()
+{
+	char axis = Serial.read();
+	
+	if (axis == 'a')
+	{
+		Serial.print(bot.x.getRPM());
+		Serial.print(bot.y.getRPM());
+		Serial.print(bot.z.getRPM());					
+	}
+	if (axis == 'x')
+		Serial.print(bot.x.getRPM());
+	else if (axis == 'y')
+		Serial.print(bot.y.getRPM());
+	else if (axis == 'z')
+		Serial.print(bot.z.getRPM());
+}
+
+void cmd_set_speed()
+{
+	char axis = Serial.read();
+	int speed = readInt();
+	
+	if (axis == 'a')
+	{
+		bot.x.setSpeed(speed);
+		bot.y.setSpeed(speed);
+		bot.z.setSpeed(speed);					
+	}
+	else if (axis == 'x')
+		bot.x.setSpeed(speed);
+	else if (axis == 'y')
+		bot.y.setSpeed(speed);
+	else if (axis == 'z')
+		bot.z.setSpeed(speed);
+}
+
+void cmd_get_speed()
+{
+	char axis = Serial.read();
+
+	if (axis == 'a')
+	{
+		Serial.print(bot.x.getSpeed());
+		Serial.print(bot.y.getSpeed());
+		Serial.print(bot.z.getSpeed());					
+	}
+	if (axis == 'x')
+		Serial.print(bot.x.getSpeed());
+	else if (axis == 'y')
+		Serial.print(bot.y.getSpeed());
+	else if (axis == 'z')
+		Serial.print(bot.z.getSpeed());
+}
+
+void cmd_get_limit_status()
+{
+	char axis = Serial.read();
+
+	if (axis == 'a')
+	{
+		Serial.print(bot.x.min.getState());
+		Serial.print(bot.x.max.getState());
+		Serial.print(bot.y.min.getState());
+		Serial.print(bot.y.max.getState());
+		Serial.print(bot.z.min.getState());
+		Serial.print(bot.z.max.getState());
+	}
+	if (axis == 'x')
+	{
+		Serial.print(bot.x.min.getState());
+		Serial.print(bot.x.max.getState());
+	}
+	else if (axis == 'y')
+	{
+		Serial.print(bot.y.min.getState());
+		Serial.print(bot.y.max.getState());
+	}
+	else if (axis == 'z')
+	{
+		Serial.print(bot.z.min.getState());
+		Serial.print(bot.z.max.getState());
+	}
+}
+
+void cmd_set_steps()
+{
+	char axis = Serial.read();
+	int steps = readInt();
+	
+	if (axis == 'a')
+	{
+		bot.x.setSteps(steps);
+		bot.y.setSteps(steps);
+		bot.z.setSteps(steps);					
+	}
+	else if (axis == 'x')
+		bot.x.setSteps(steps);
+	else if (axis == 'y')
+		bot.y.setSteps(steps);
+	else if (axis == 'z')
+		bot.z.setSteps(steps);
+}
+
+void cmd_get_steps()
+{
+	char axis = Serial.read();
+
+	if (axis == 'a')
+	{
+		Serial.print(bot.x.getSteps());
+		Serial.print(bot.y.getSteps());
+		Serial.print(bot.z.getSteps());					
+	}
+	if (axis == 'x')
+		Serial.print(bot.x.getSteps());
+	else if (axis == 'y')
+		Serial.print(bot.y.getSteps());
+	else if (axis == 'z')
+		Serial.print(bot.z.getSteps());
+}
+
+void cmd_set_temp()
+{
+	
+}
+
+void cmd_get_temp()
+{
+	
+}
+
+void cmd_extruder_set_direction()
+{
+	
+}
+
+void cmd_extruder_get_direction()
+{
+	
+}
+
+void cmd_extruder_set_speed()
+{
+	
+}
+
+void cmd_extruder_get_speed()
+{
+	
+}
+
+/*******************************************
+* Serial comms helper functions.
+*******************************************/
 
 int readInt()
 {
@@ -373,24 +508,12 @@ int readInt()
 	return tmp;
 }
 
-void abortPrint()
+void ack()
 {
-	extruder.abort();
-	cartesianbot.abort();
+	Serial.print(CMD_REPLY_ACK);
 }
 
-void goHome()
+void nak()
 {
-	//clear our queue, and tell it to go home.
-	//the endstops will take care of the rest. (hopefully)
-	point_index = 0;
-	point_queue[0].x = -100;
-	point_queue[0].y = -100;
-	point_queue[0].z = -100;
-}
-
-void readExtruderSettings()
-{
-	extruder.setDirection(Serial.read());
-	extruder.setSpeed(Serial.read());
+	Serial.print(CMD_REPLY_NAK);
 }
