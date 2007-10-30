@@ -59,12 +59,13 @@
 #define CMD_GET_STEPS				66 // gets the number of steps per revoltion for a specific axis
 
 // extruder specific commands
-#define CMD_SET_TEMP				100 // asks us to set our temp target (pre conversion)
-#define CMD_GET_TEMP				101 // asks us for our current temperature (pre conversion)
-#define CMD_EXTRUDER_SET_DIRECTION	102 // asks us to set our extruder's direction
-#define CMD_EXTRUDER_GET_DIRECTION	103 // asks us to get our extruder's direction
-#define CMD_EXTRUDER_SET_SPEED		104 // asks us to set our extruder's speed
-#define CMD_EXTRUDER_GET_SPEED		105 // asks us to get our extruder's speed
+#define CMD_SET_TEMP					100 // asks us to set our temp target (pre conversion ADC)
+#define CMD_GET_TEMP					101 // asks us for our current temperature (pre conversion ADC)
+#define CMD_EXTRUDER_SET_DIRECTION		102 // asks us to set our extruder's direction
+#define CMD_EXTRUDER_GET_DIRECTION		103 // asks us to get our extruder's direction
+#define CMD_EXTRUDER_SET_SPEED			104 // asks us to set our extruder's speed
+#define CMD_EXTRUDER_GET_SPEED			105 // asks us to get our extruder's speed
+#define CMD_EXTRUDER_GET_TARGET_TEMP	106 // asks us for our target temperature (pre conversion ADC)
 
 // our true/false values
 #define CMD_REPLY_NAK 0
@@ -76,7 +77,7 @@
 
 //our main objects
 CartesianBot bot();
-ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_THERMISTOR_PIN);
+ThermoplastExtruder extruder();
 
 void setup()
 {
@@ -180,6 +181,8 @@ void receiveCommands()
 				cmd_extruder_set_speed();
 			else if (cmd == CMD_EXTRUDER_GET_SPEED)
 				cmd_extruder_get_speed();
+			else if (cmd == CMD_EXTRUDER_GET_TARGET_TEMP)
+				cmd_extruder_get_target_temp();
 			//we didnt get any valid commands???
 			else
 				nak();
@@ -338,6 +341,8 @@ void cmd_set_rpm()
 		bot.y.setRPM(speed);
 	else if (axis == 'z')
 		bot.z.setRPM(speed);
+
+	ack();
 }
 
 void cmd_get_rpm()
@@ -356,6 +361,8 @@ void cmd_get_rpm()
 		Serial.print(bot.y.getRPM());
 	else if (axis == 'z')
 		Serial.print(bot.z.getRPM());
+
+	ack();
 }
 
 void cmd_set_speed()
@@ -375,6 +382,8 @@ void cmd_set_speed()
 		bot.y.setSpeed(speed);
 	else if (axis == 'z')
 		bot.z.setSpeed(speed);
+
+	ack();
 }
 
 void cmd_get_speed()
@@ -393,6 +402,8 @@ void cmd_get_speed()
 		Serial.print(bot.y.getSpeed());
 	else if (axis == 'z')
 		Serial.print(bot.z.getSpeed());
+	
+	ack();
 }
 
 void cmd_get_limit_status()
@@ -423,6 +434,8 @@ void cmd_get_limit_status()
 		Serial.print(bot.z.min.getState());
 		Serial.print(bot.z.max.getState());
 	}
+	
+	ack();
 }
 
 void cmd_set_steps()
@@ -442,6 +455,8 @@ void cmd_set_steps()
 		bot.y.setSteps(steps);
 	else if (axis == 'z')
 		bot.z.setSteps(steps);
+		
+	ack();
 }
 
 void cmd_get_steps()
@@ -460,36 +475,50 @@ void cmd_get_steps()
 		Serial.print(bot.y.getSteps());
 	else if (axis == 'z')
 		Serial.print(bot.z.getSteps());
+
+	ack();
 }
 
 void cmd_set_temp()
 {
-	
+	extruder.setTargetTemp(readInt());
+	ack();
 }
 
 void cmd_get_temp()
 {
-	
+	Serial.print(extruder.getTemp());
+	ack();
 }
 
 void cmd_extruder_set_direction()
 {
-	
+	extruder.setDirection(Serial.read());
+	ack();
 }
 
 void cmd_extruder_get_direction()
 {
-	
+	Serial.print(extruder.getDirection());
+	ack();
 }
 
 void cmd_extruder_set_speed()
 {
-	
+	extruder.setSpeed(Serial.read());
+	ack();
 }
 
 void cmd_extruder_get_speed()
 {
-	
+	Serial.print(extruder.getSpeed());
+	ack();
+}
+
+void cmd_extruder_get_target_temp()
+{
+	Serial.print(extruder.getTargetTemp());
+	ack();
 }
 
 /*******************************************
