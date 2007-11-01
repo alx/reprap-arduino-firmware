@@ -1,8 +1,14 @@
 /******************
 * Get our libraries
 ******************/
+
+#include <LinearAxis.h>
+#include <LimitSwitch.h>
+#include <RepStepper.h>
 #include <CartesianBot.h>
 #include <ThermoplastExtruder.h>
+
+
 
 //the version of our software
 #define VERSION 1
