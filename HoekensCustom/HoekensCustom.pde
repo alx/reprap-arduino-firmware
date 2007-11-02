@@ -24,7 +24,7 @@
 #define X_STEP_PIN 9
 #define Y_DIR_PIN 10
 #define Y_STEP_PIN 11
-#define Z_DIR_PIN 12
+#define Z_DIR_PIN 12
 #define Z_STEP_PIN 13
 
 /********************************
@@ -91,8 +91,8 @@ void setup()
 
 	//init our steppers
 	bot.x.stepper = RepStepper(X_DIR_PIN, X_STEP_PIN);
-	bot.y.stepper = RepStepper(X_DIR_PIN, X_STEP_PIN);
-	bot.z.stepper = RepStepper(X_DIR_PIN, X_STEP_PIN);
+	bot.y.stepper = RepStepper(Y_DIR_PIN, Y_STEP_PIN);
+	bot.z.stepper = RepStepper(Z_DIR_PIN, Z_STEP_PIN);
 
 	//init our limit switches
 	bot.x.min = LimitSwitch(X_HOME_PIN);
