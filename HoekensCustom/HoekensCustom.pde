@@ -14,9 +14,9 @@
 /********************************
 * digital i/o pin assignment
 ********************************/
-#define X_HOME_PIN 2
-#define Y_HOME_PIN 3
-#define Z_HOME_PIN 4
+#define X_MIN_PIN 2
+#define Y_MIN_PIN 3
+#define Z_MIN_PIN 4
 #define EXTRUDER_MOTOR_SPEED_PIN 5
 #define EXTRUDER_HEATER_PIN 6
 #define EXTRUDER_MOTOR_DIR_PIN 7
@@ -28,6 +28,13 @@
 #define Z_STEP_PIN 13
 
 /********************************
+* unused digital pins...
+********************************/
+#define X_MAX_PIN -1
+#define Y_MAX_PIN -1
+#define Z_MAX_PIN -1
+
+/********************************
 * analog input pin assignments
 ********************************/
 #define EXTRUDER_THERMISTOR_PIN 0
@@ -35,6 +42,13 @@
 #define Y_ENCODER_PIN 2
 #define Z_ENCODER_PIN 3
 #define EXTRUDER_MOTOR_ENCODER_PIN 4
+
+/********************************
+* how many steps do our motors have?
+********************************/
+#define X_MOTOR_STEPS 200
+#define Y_MOTOR_STEPS 200
+#define Z_MOTOR_STEPS 200
 
 /********************************
 * command declarations
@@ -80,7 +94,11 @@
 ********************************/
 
 //our main objects
-CartesianBot bot();
+CartesianBot bot(
+  X_MOTOR_STEPS, X_DIR_PIN, X_STEP_PIN, X_MIN_PIN, X_MAX_PIN,
+  Y_MOTOR_STEPS, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN,
+  Z_MOTOR_STEPS, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN
+);
 ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_THERMISTOR_PIN);
 
 void setup()
@@ -88,16 +106,6 @@ void setup()
 	//fire up our serial comms.
 	Serial.begin(19200);
 	Serial.println("RepDuino v1.0 started up.");
-
-	//init our steppers
-	bot.x.stepper = RepStepper(X_DIR_PIN, X_STEP_PIN);
-	bot.y.stepper = RepStepper(Y_DIR_PIN, Y_STEP_PIN);
-	bot.z.stepper = RepStepper(Z_DIR_PIN, Z_STEP_PIN);
-
-	//init our limit switches
-	bot.x.min = LimitSwitch(X_HOME_PIN);
-	bot.y.min = LimitSwitch(Y_HOME_PIN);
-	bot.z.min = LimitSwitch(Z_HOME_PIN);
 }
 
 void loop()
