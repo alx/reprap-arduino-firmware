@@ -2,13 +2,11 @@
 * Get our libraries
 ******************/
 
-#include <LinearAxis.h>
 #include <LimitSwitch.h>
 #include <RepStepper.h>
+#include <LinearAxis.h>
 #include <CartesianBot.h>
 #include <ThermoplastExtruder.h>
-
-
 
 //the version of our software
 #define VERSION 1
@@ -83,7 +81,7 @@
 
 //our main objects
 CartesianBot bot();
-ThermoplastExtruder extruder();
+ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_THERMISTOR_PIN);
 
 void setup()
 {
