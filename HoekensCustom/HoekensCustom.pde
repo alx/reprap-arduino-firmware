@@ -89,22 +89,15 @@ void setup()
 	Serial.begin(19200);
 	Serial.println("RepDuino v1.0 started up.");
 
-/*
-	//add our stepper motors in.
-	bot.addStepper('x', 200, X_DIR_PIN, X_STEP_PIN);
-	bot.addStepper('y', 200, Y_DIR_PIN, Y_STEP_PIN);
-	bot.addStepper('z', 200, Z_DIR_PIN, Z_STEP_PIN);
+	//init our steppers
+	bot.x.stepper = RepStepper(X_DIR_PIN, X_STEP_PIN);
+	bot.y.stepper = RepStepper(X_DIR_PIN, X_STEP_PIN);
+	bot.z.stepper = RepStepper(X_DIR_PIN, X_STEP_PIN);
 
-	//also, our home switches.
-	bot.addHomeSwitch('x', X_HOME_PIN);
-	bot.addHomeSwitch('y', Y_HOME_PIN);
-	bot.addHomeSwitch('z', Z_HOME_PIN);
-
-	//what about our encoders?
-//	bot.addEncoder('x', X_ENCODER_PIN);
-//	bot.addEncoder('y', Y_ENCODER_PIN);
-//	bot.addEncoder('z', Z_ENCODER_PIN);
-*/
+	//init our limit switches
+	bot.x.min = LimitSwitch(X_HOME_PIN);
+	bot.y.min = LimitSwitch(Y_HOME_PIN);
+	bot.z.min = LimitSwitch(Z_HOME_PIN);
 }
 
 void loop()
