@@ -1,3 +1,4 @@
+
 /******************
 * Get our libraries
 ******************/
@@ -123,14 +124,14 @@ void readState()
 
 void receiveCommands()
 {
-	int command;
+	int cmd;
 	
 	while (Serial.available() > 1)
 	{
-		command = Serial.read();
+		cmd = Serial.read();
 		
 		//start our reply.
-		beginReply(command);
+		beginReply(cmd);
 		
 		//did we get a valid command?
 		if (cmd >= 0)
@@ -286,7 +287,8 @@ void cmd_clear_queue()
 
 void cmd_get_queue()
 {
-	bot.printQueue();
+//TODO: Add print queue function
+	//bot.printQueue();
 	ack();
 }
 
@@ -318,14 +320,16 @@ void cmd_pause()
 
 void cmd_abort()
 {
-	extruder.abort();
-	extruder.abort();
+  //todo: add extruder.abort()
+//	extruder.abort();
+	bot.abort();
 	ack();
 }
 
 void cmd_home()
 {
-	bot.home();
+  //todo: add bot.home()
+//	bot.home();
 	ack();
 }
 
@@ -336,16 +340,16 @@ void cmd_set_rpm()
 	
 	if (axis == 'a')
 	{
-		bot.x.setRPM(speed);
-		bot.y.setRPM(speed);
-		bot.z.setRPM(speed);					
+		bot.x.stepper.setRPM(speed);
+		bot.y.stepper.setRPM(speed);
+		bot.z.stepper.setRPM(speed);					
 	}
 	else if (axis == 'x')
-		bot.x.setRPM(speed);
+		bot.x.stepper.setRPM(speed);
 	else if (axis == 'y')
-		bot.y.setRPM(speed);
+		bot.y.stepper.setRPM(speed);
 	else if (axis == 'z')
-		bot.z.setRPM(speed);
+		bot.z.stepper.setRPM(speed);
 
 	ack();
 }
@@ -356,16 +360,16 @@ void cmd_get_rpm()
 	
 	if (axis == 'a')
 	{
-		Serial.print(bot.x.getRPM());
-		Serial.print(bot.y.getRPM());
-		Serial.print(bot.z.getRPM());					
+		Serial.print(bot.x.stepper.getRPM());
+		Serial.print(bot.y.stepper.getRPM());
+		Serial.print(bot.z.stepper.getRPM());					
 	}
 	if (axis == 'x')
-		Serial.print(bot.x.getRPM());
+		Serial.print(bot.x.stepper.getRPM());
 	else if (axis == 'y')
-		Serial.print(bot.y.getRPM());
+		Serial.print(bot.y.stepper.getRPM());
 	else if (axis == 'z')
-		Serial.print(bot.z.getRPM());
+		Serial.print(bot.z.stepper.getRPM());
 
 	ack();
 }
@@ -377,16 +381,16 @@ void cmd_set_speed()
 	
 	if (axis == 'a')
 	{
-		bot.x.setSpeed(speed);
-		bot.y.setSpeed(speed);
-		bot.z.setSpeed(speed);					
+		bot.x.stepper.setSpeed(speed);
+		bot.y.stepper.setSpeed(speed);
+		bot.z.stepper.setSpeed(speed);					
 	}
 	else if (axis == 'x')
-		bot.x.setSpeed(speed);
+		bot.x.stepper.setSpeed(speed);
 	else if (axis == 'y')
-		bot.y.setSpeed(speed);
+		bot.y.stepper.setSpeed(speed);
 	else if (axis == 'z')
-		bot.z.setSpeed(speed);
+		bot.z.stepper.setSpeed(speed);
 
 	ack();
 }
@@ -397,16 +401,16 @@ void cmd_get_speed()
 
 	if (axis == 'a')
 	{
-		Serial.print(bot.x.getSpeed());
-		Serial.print(bot.y.getSpeed());
-		Serial.print(bot.z.getSpeed());					
+		Serial.print(bot.x.stepper.getSpeed());
+		Serial.print(bot.y.stepper.getSpeed());
+		Serial.print(bot.z.stepper.getSpeed());					
 	}
 	if (axis == 'x')
-		Serial.print(bot.x.getSpeed());
+		Serial.print(bot.x.stepper.getSpeed());
 	else if (axis == 'y')
-		Serial.print(bot.y.getSpeed());
+		Serial.print(bot.y.stepper.getSpeed());
 	else if (axis == 'z')
-		Serial.print(bot.z.getSpeed());
+		Serial.print(bot.z.stepper.getSpeed());
 	
 	ack();
 }
@@ -542,6 +546,10 @@ int readInt()
 	return tmp;
 }
 
+void beginReply(int cmd)
+{
+}
+
 void ack()
 {
 	Serial.print(CMD_REPLY_ACK);
@@ -550,4 +558,8 @@ void ack()
 void nak()
 {
 	Serial.print(CMD_REPLY_NAK);
+}
+
+void endReply()
+{
 }
