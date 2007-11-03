@@ -106,7 +106,6 @@ void setup()
 {
 	//fire up our serial comms.
 	Serial.begin(19200);
-	Serial.println("RepDuino v1.0 started up.");
 }
 
 void loop()
@@ -421,27 +420,27 @@ void cmd_get_limit_status()
 
 	if (axis == 'a')
 	{
-		Serial.print(bot.x.min.getState());
-		Serial.print(bot.x.max.getState());
-		Serial.print(bot.y.min.getState());
-		Serial.print(bot.y.max.getState());
-		Serial.print(bot.z.min.getState());
-		Serial.print(bot.z.max.getState());
+		Serial.print(bot.x.min_switch.getState());
+		Serial.print(bot.x.max_switch.getState());
+		Serial.print(bot.y.min_switch.getState());
+		Serial.print(bot.y.max_switch.getState());
+		Serial.print(bot.z.min_switch.getState());
+		Serial.print(bot.z.max_switch.getState());
 	}
 	if (axis == 'x')
 	{
-		Serial.print(bot.x.min.getState());
-		Serial.print(bot.x.max.getState());
+		Serial.print(bot.x.min_switch.getState());
+		Serial.print(bot.x.max_switch.getState());
 	}
 	else if (axis == 'y')
 	{
-		Serial.print(bot.y.min.getState());
-		Serial.print(bot.y.max.getState());
+		Serial.print(bot.y.min_switch.getState());
+		Serial.print(bot.y.max_switch.getState());
 	}
 	else if (axis == 'z')
 	{
-		Serial.print(bot.z.min.getState());
-		Serial.print(bot.z.max.getState());
+		Serial.print(bot.z.min_switch.getState());
+		Serial.print(bot.z.max_switch.getState());
 	}
 	
 	ack();
@@ -454,16 +453,16 @@ void cmd_set_steps()
 	
 	if (axis == 'a')
 	{
-		bot.x.setSteps(steps);
-		bot.y.setSteps(steps);
-		bot.z.setSteps(steps);					
+		bot.x.stepper.setSteps(steps);
+		bot.y.stepper.setSteps(steps);
+		bot.z.stepper.setSteps(steps);					
 	}
 	else if (axis == 'x')
-		bot.x.setSteps(steps);
+		bot.x.stepper.setSteps(steps);
 	else if (axis == 'y')
-		bot.y.setSteps(steps);
+		bot.y.stepper.setSteps(steps);
 	else if (axis == 'z')
-		bot.z.setSteps(steps);
+		bot.z.stepper.setSteps(steps);
 		
 	ack();
 }
@@ -474,16 +473,16 @@ void cmd_get_steps()
 
 	if (axis == 'a')
 	{
-		Serial.print(bot.x.getSteps());
-		Serial.print(bot.y.getSteps());
-		Serial.print(bot.z.getSteps());					
+		Serial.print(bot.x.stepper.getSteps());
+		Serial.print(bot.y.stepper.getSteps());
+		Serial.print(bot.z.stepper.getSteps());					
 	}
 	if (axis == 'x')
-		Serial.print(bot.x.getSteps());
+		Serial.print(bot.x.stepper.getSteps());
 	else if (axis == 'y')
-		Serial.print(bot.y.getSteps());
+		Serial.print(bot.y.stepper.getSteps());
 	else if (axis == 'z')
-		Serial.print(bot.z.getSteps());
+		Serial.print(bot.z.stepper.getSteps());
 
 	ack();
 }
