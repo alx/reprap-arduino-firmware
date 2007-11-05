@@ -11,6 +11,8 @@
 
 //the version of our software
 #define VERSION 1
+#define MY_ADDRESS 1
+#define HOST_ADDRESS 0
 
 /********************************
 * digital i/o pin assignment
