@@ -59,7 +59,7 @@
 
 // generic version command
 #define CMD_VERSION   				0  // asks us for our version #
-#define CMD_GET_ALL_STATUS			1 // asks us for our global status
+#define CMD_REPLY					2  // this is our ack/nack reply
 
 //cartesian bot specific commands
 #define CMD_QUEUE_POINT				51  // asks us to queue a point up
@@ -102,7 +102,10 @@ CartesianBot bot(
   Y_MOTOR_STEPS, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN,
   Z_MOTOR_STEPS, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN
 );
+
 ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_THERMISTOR_PIN);
+
+PackIt pkt();
 
 void setup()
 {
@@ -126,76 +129,77 @@ void readState()
 void receiveCommands()
 {
 	int cmd;
+	bool ret = false;
 	
 	while (Serial.available() > 1)
 	{
 		cmd = Serial.read();
 		
-		//start our reply.
-		beginReply(cmd);
-		
+		//start our reply
+		pkt.clear();
+		pkt.add(cmd);
+
 		//did we get a valid command?
 		if (cmd >= 0)
 		{
 			//these are basically just global commands
 			if (cmd == CMD_VERSION)
-				cmd_version();
-			else if (cmd == CMD_GET_ALL_STATUS)
-				cmd_get_all_status();
+				ret = cmd_version();
+			
 			//these are for our cartesian bot.
 			else if (cmd == CMD_QUEUE_POINT)
-				cmd_queue_point();
+				ret = cmd_queue_point();
+				
 			else if (cmd == CMD_CLEAR_QUEUE)
-				cmd_clear_queue();
+				ret bot.clearQueue();
 			else if (cmd == CMD_GET_QUEUE)
-				cmd_get_queue();
+				ret = cmd_get_queue();
 			else if (cmd == CMD_SET_POS)
-				cmd_set_pos();
+				ret = cmd_set_pos();
 			else if (cmd == CMD_GET_POS)
-				cmd_get_pos();
+				ret = cmd_get_pos();
 			else if (cmd == CMD_SEEK)
-				cmd_seek();
+				ret = cmd_seek();
 			else if (cmd == CMD_PAUSE)
-				cmd_pause();
+				ret = cmd_pause();
 			else if (cmd == CMD_ABORT)
-				cmd_abort();
+				ret = cmd_abort();
 			else if (cmd == CMD_HOME)
-				cmd_home();
+				ret = cmd_home();
 			else if (cmd == CMD_SET_RPM)
-				cmd_set_rpm();
+				ret = cmd_set_rpm();
 			else if (cmd == CMD_GET_RPM)
-				cmd_get_rpm();
+				ret = cmd_get_rpm();
 			else if (cmd == CMD_SET_SPEED)
-				cmd_set_speed();
+				ret = cmd_set_speed();
 			else if (cmd == CMD_GET_SPEED)
-				cmd_get_speed();
+				ret = cmd_get_speed();
 			else if (cmd == CMD_GET_LIMIT_STATUS)
-				cmd_get_limit_status();
+				ret = cmd_get_limit_status();
 			else if (cmd == CMD_SET_STEPS)
-				cmd_set_steps();
+				ret = cmd_set_steps();
 			else if (cmd == CMD_GET_STEPS)
-				cmd_get_steps();
+				ret = cmd_get_steps();
+			
 			//okay, these are for our extruder.
 			else if (cmd == CMD_SET_TEMP)
-				cmd_set_temp();
+				ret = cmd_set_temp();
 			else if (cmd == CMD_GET_TEMP)
-				cmd_get_temp();
+				ret = cmd_get_temp();
 			else if (cmd == CMD_EXTRUDER_SET_DIRECTION)
-				cmd_extruder_set_direction();
+				ret = cmd_extruder_set_direction();
 			else if (cmd == CMD_EXTRUDER_GET_DIRECTION)
-				cmd_extruder_get_direction();
+				ret = cmd_extruder_get_direction();
 			else if (cmd == CMD_EXTRUDER_SET_SPEED)
-				cmd_extruder_set_speed();
+				ret = cmd_extruder_set_speed();
 			else if (cmd == CMD_EXTRUDER_GET_SPEED)
-				cmd_extruder_get_speed();
+				ret = cmd_extruder_get_speed();
 			else if (cmd == CMD_EXTRUDER_GET_TARGET_TEMP)
-				cmd_extruder_get_target_temp();
-			//we didnt get any valid commands???
-			else
-				nak();
+				ret = cmd_extruder_get_target_temp();
 		}
 		
-		endReply();
+		pkt.add(ret);
+		pkt.reply(HOST_ADDRESS);
 	}
 }
 
@@ -205,66 +209,11 @@ void executeCommands()
 	bot.move();
 }
 
-/**********************************************
-*  These are our command handling functions. 
-**********************************************/
-
 void cmd_version()
 {
-	Serial.print(VERSION);
-	ack();
+	pkt.add(VERSION);
 }
 
-void cmd_get_all_status()
-{
-/*	
-	//our analog readings.
-	Serial.print("T:");
-	Serial.print(thermistor_reading);
-	Serial.print('Xe:');
-	Serial.print(x_encoder_reading);
-	Serial.print('Ye:');
-	Serial.print(y_encoder_reading);
-	Serial.print('Ze:');
-	Serial.print(z_encoder_reading);
-	Serial.print('Ee:');
-	Serial.print(extruder_motor_encoder_reading);
-
-	//our current position and such
-	Serial.print('Xp:');
-	Serial.print(x_position);
-	Serial.print('Yp:');
-	Serial.print(y_position);
-	Serial.print('Zp:');
-	Serial.print(z_position);
-
-	//are we at our limit?
-	Serial.print('Xmin:');
-	Serial.print(x_at_home);
-	Serial.print('Ymin:');
-	Serial.print(y_at_home);
-	Serial.print('Zmin:');
-	Serial.print(z_at_home);
-
-	//what direction?
-	Serial.print('Xdir:');
-	Serial.print(x_direction);
-	Serial.print('Ydir:');
-	Serial.print(y_direction);
-	Serial.print('Zdir:');
-	Serial.print(z_direction);
-
-	//what about our extruder?
-	Serial.print('Edir:');
-	Serial.print(extruder_direction);
-	Serial.print('Espeed:');
-	Serial.print(extruder_speed);
-	Serial.print('Heater:');
-	Serial.print(extruder_heater_pwm);
-	Serial.print();
-*/	
-	ack();
-}
 
 void cmd_queue_point()
 {
@@ -274,15 +223,17 @@ void cmd_queue_point()
 	point.y = readInt();
 	point.z = readInt();
 	
-	if (bot.queuePoint(point))
+	return bot.queuePoint(point));
+	
 		ack();
 	else
 		nak();
 }
 
+
 void cmd_clear_queue()
 {
-	bot.clearQueue();
+	
 	ack();
 }
 
