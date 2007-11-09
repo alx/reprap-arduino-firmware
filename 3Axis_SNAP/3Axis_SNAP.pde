@@ -12,9 +12,9 @@
 //the version of our software
 #define VERSION_MAJOR 2
 #define VERSION_MINOR 0
-#define X_ADDRESS 1
-#define Y_ADDRESS 2
-#define Z_ADDRESS 3
+#define X_ADDRESS 2
+#define Y_ADDRESS 3
+#define Z_ADDRESS 4
 #define HOST_ADDRESS 0
 
 /********************************
@@ -159,7 +159,7 @@ void executeCommands()
 			break;
 
 		case CMD_SETPOS:
-			position = (snap.getByte(0) << 8) + snap.getByte(1);
+			position = (snap.getByte(2) << 8) + (snap.getByte(1));
 		
 			//okay, set our speed.
 			if (dest == X_ADDRESS)
@@ -182,14 +182,14 @@ void executeCommands()
 			// Get position counter
 			snap.sendReply();
 			snap.sendDataByte(CMD_GETPOS);
-			snap.sendDataByte(position >> 8);
 			snap.sendDataByte(position);
+			snap.sendDataByte(position >> 8);
 			snap.endMessage();
 			break;
 
 		case CMD_SEEK:
 			// Goto position
-			position = (snap.getByte(2) << 8) + snap.getByte(3);
+			position = (snap.getByte(3) << 8) + snap.getByte(2h);
 
 			//okay, set our speed.
 			if (dest == X_ADDRESS)
@@ -253,7 +253,7 @@ void executeCommands()
 				position = bot.z.stepper.getMaximum();
 
 			// Request range
-			sendReply();
+			sendReplyply();
 			sendDataByte(CMD_GETRANGE);
 			sendDataByte((position >> 8));
 			sendDataByte((position));
