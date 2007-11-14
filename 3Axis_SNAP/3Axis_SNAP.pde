@@ -81,7 +81,7 @@ enum functions {
 ********************************/
 
 //our cartesian bot object
-CartesianBot bot(
+volatile CartesianBot bot(
   X_MOTOR_STEPS, X_DIR_PIN, X_STEP_PIN, X_MIN_PIN, X_MAX_PIN,
   Y_MOTOR_STEPS, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN,
   Z_MOTOR_STEPS, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN
@@ -92,7 +92,12 @@ SNAP snap();
 
 //what are we doing?
 int function;
-
+	
+SIGNAL(SIG_OUTPUT_COMPARE0A)
+{
+	bot.handleInterrupt();
+}
+	
 void setup()
 {
 	//fire up our serial comms.
