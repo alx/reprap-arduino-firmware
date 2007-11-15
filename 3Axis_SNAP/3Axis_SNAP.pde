@@ -93,10 +93,12 @@ SNAP snap();
 //what are we doing?
 int function;
 	
+
 SIGNAL(SIG_OUTPUT_COMPARE0A)
 {
 	bot.handleInterrupt();
 }
+
 	
 void setup()
 {
@@ -194,7 +196,7 @@ void executeCommands()
 
 		case CMD_SEEK:
 			// Goto position
-			position = (snap.getByte(3) << 8) + snap.getByte(2h);
+			position = (snap.getByte(3) << 8) + snap.getByte(2);
 
 			//okay, set our speed.
 			if (dest == X_ADDRESS)
