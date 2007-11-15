@@ -94,7 +94,7 @@ SNAP snap();
 int function;
 	
 
-SIGNAL(SIG_OUTPUT_COMPARE0A)
+SIGNAL(SIG_OUTPUT_COMPARE2A)
 {
 	bot.handleInterrupt();
 }
