@@ -92,13 +92,16 @@ SNAP snap();
 
 //what are we doing?
 int function;
-	
 
 SIGNAL(SIG_OUTPUT_COMPARE2A)
 {
-	bot.handleInterrupt();
+	handleInterrupt();
 }
 
+void handleInterrupt()
+{
+	bot.handleInterrupt();
+}
 	
 void setup()
 {
