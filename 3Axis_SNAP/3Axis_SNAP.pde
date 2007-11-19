@@ -81,26 +81,50 @@ enum functions {
 ********************************/
 
 //our cartesian bot object
-volatile CartesianBot bot(
-  X_MOTOR_STEPS, X_DIR_PIN, X_STEP_PIN, X_MIN_PIN, X_MAX_PIN,
-  Y_MOTOR_STEPS, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN,
-  Z_MOTOR_STEPS, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN
+CartesianBot bot(
+  'x', X_MOTOR_STEPS, X_DIR_PIN, X_STEP_PIN, X_MIN_PIN, X_MAX_PIN,
+  'y', Y_MOTOR_STEPS, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN,
+  'z', Z_MOTOR_STEPS, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN
 );
 
 //our communicator object
-SNAP snap();
+SNAP snap(1);
 
 //what are we doing?
 int function;
+byte seekNotify = 1;
+
+SIGNAL(SIG_OUTPUT_COMPARE0A)
+{
+	handleXInterrupt();
+}
+
+SIGNAL(SIG_OUTPUT_COMPARE1A)
+{
+	handleYInterrupt();
+}
 
 SIGNAL(SIG_OUTPUT_COMPARE2A)
 {
-	handleInterrupt();
+	handleZInterrupt();
 }
 
-void handleInterrupt()
+void handleXInterrupt()
 {
-	bot.handleInterrupt();
+  if (bot.x.canStep())
+    bot.x.doStep();
+}
+
+void handleYInterrupt()
+{
+  if (bot.y.canStep())
+    bot.y.doStep();
+}
+
+void handleZInterrupt()
+{
+  if (bot.z.canStep())
+    bot.z.doStep();
 }
 	
 void setup()
@@ -111,10 +135,21 @@ void setup()
 
 void loop()
 {
-	receiveCommands();
-	
-	if (snap.packetReady())
-		executeCommands();
+  //do our serial stuff
+  receiveCommands();
+  if (snap.packetReady())
+    executeCommands();
+
+  //get our state status.
+  bot.readState();
+
+  //check to see if we need to get another point
+  if (bot.atTarget())
+  {
+    if (seekNotify)
+      notifyTargetReached();
+    bot.getNextPoint();
+  }  
 }
 
 void receiveCommands()
@@ -220,11 +255,6 @@ void executeCommands()
 			
 			//recalculate our DDA algo.
 			bot.calculateDDA();
-			
-			if (sync_mode == sync_seek)
-				function = func_syncwait;
-			else
-				function = func_seek;
 			break;
 
 		case CMD_FREE:
@@ -239,7 +269,7 @@ void executeCommands()
 
 		case CMD_SYNC:
 			// Set sync mode
-			sync_mode = snap.getByte(1);
+			//sync_mode = snap.getByte(1);
 			break;
 
 		case CMD_CALIBRATE:
@@ -255,6 +285,8 @@ void executeCommands()
 			break;
 
 		case CMD_GETRANGE:
+
+                   /*
 			if (dest == X_ADDRESS)
 				position = bot.x.stepper.getMaximum();
 			else if (dest == Y_ADDRESS)
@@ -268,7 +300,9 @@ void executeCommands()
 			sendDataByte((position >> 8));
 			sendDataByte((position));
 			endMessage();
-			break;
+		    */	
+
+                  break;
 
 		case CMD_DDA:
 		// Master a DDA
@@ -330,4 +364,9 @@ void executeCommands()
 			function = func_homereset;
 			break;
 	}
+}
+
+void notifyTargetReached()
+{
+  //send a message that we've arrived.
 }
