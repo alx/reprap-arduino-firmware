@@ -111,19 +111,16 @@ SIGNAL(SIG_OUTPUT_COMPARE2A)
 
 void handleXInterrupt()
 {
-  if (bot.x.canStep())
     bot.x.doStep();
 }
 
 void handleYInterrupt()
 {
-  if (bot.y.canStep())
     bot.y.doStep();
 }
 
 void handleZInterrupt()
 {
-  if (bot.z.canStep())
     bot.z.doStep();
 }
 	
