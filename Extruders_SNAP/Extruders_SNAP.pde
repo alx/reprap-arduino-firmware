@@ -80,33 +80,12 @@ void receiveCommands()
   }
 }
 
-#define CMDBUFFER_SIZE 100
 
-int cmdCount = 0;
-int cmdBuffer[CMDBUFFER_SIZE] = {0};
 
 int notImplemented(int cmd)
 {
-  if (cmdCount < CMDBUFFER_SIZE)
-  {
-    cmdBuffer[cmdCount] = cmd;
-    cmdCount++;
-  }
-  //digitalWrite(DEBUG_LED_PIN, HIGH);
-}
-
-void printUnused()
-{
-  snap.sendReply();
-  snap.sendDataByte(224);    
   digitalWrite(DEBUG_LED_PIN, HIGH);
-  for (int i = 0; i < cmdCount; i++)
-  {
-    snap.sendDataByte(cmdBuffer[i]); 
-  }
-  snap.endMessage();
 }
-
 
   
 int currentPos = 0;
@@ -121,10 +100,6 @@ digitalWrite(10, 1);
   byte cmd = snap.getByte(0);
 	
   switch (cmd) {
-    
-  case 0xDF: //223:
-    printUnused();
-    break;
       
   case CMD_VERSION:
     snap.sendReply();
