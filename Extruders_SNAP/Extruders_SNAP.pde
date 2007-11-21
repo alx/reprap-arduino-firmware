@@ -4,26 +4,23 @@
 #define VERSION_MINOR 1
 #define HOST_ADDRESS 0
 
-/********************************
- * command declarations
- ********************************/
-#define CMD_VERSION   0
-#define CMD_FORWARD   1
-#define CMD_REVERSE   2
-#define CMD_SETPOS    3
-#define CMD_GETPOS    4
-#define CMD_SEEK      5
-#define CMD_FREE      6
-#define CMD_NOTIFY    7
-#define CMD_SYNC      8
-#define CMD_CALIBRATE 9
-#define CMD_GETRANGE  10
-#define CMD_DDA       11
-#define CMD_FORWARD1  12
-#define CMD_BACKWARD1 13
-#define CMD_SETPOWER  14
-#define CMD_GETSENSOR 15
-#define CMD_HOMERESET 16
+//
+// Extruder commands
+//
+#define CMD_VERSION             0
+#define CMD_FORWARD             1
+#define CMD_REVERSE             2
+#define CMD_SETPOS              3
+#define CMD_GETPOS              4
+#define CMD_SEEK                5
+#define CMD_MOTOR_OFF           6
+#define CMD_ENABLE_ASYNC_NOTIFY 7
+#define CMD_MATERIAL_EMPTY      8
+#define CMD_SET_HEATER          9
+#define CMD_GET_TEMP           10
+#define CMD_SET_PWM            50
+#define CMD_SET_PRESCALER      51
+#define CMD_SET_VREF           52
 
 SNAP snap;
 
