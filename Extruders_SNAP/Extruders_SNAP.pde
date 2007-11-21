@@ -4,26 +4,9 @@
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 1
 #define HOST_ADDRESS 0
-
 //
-// Extrude commands (marius; names)
+// Extrude commands
 //
-/*
-#define CMD_VERSION             0
-#define CMD_FORWARD             1
-#define CMD_REVERSE             2
-#define CMD_SETPOS              3
-#define CMD_GETPOS              4
-#define CMD_SEEK                5
-#define CMD_MOTOR_OFF           6
-#define CMD_ENABLE_ASYNC_NOTIFY 7
-#define CMD_MATERIAL_EMPTY      8
-#define CMD_SET_HEATER          9
-#define CMD_GET_TEMP           10
-#define CMD_SET_PWM            50
-#define CMD_SET_PRESCALER      51
-#define CMD_SET_VREF           52
-*/
 #define CMD_VERSION       0
 #define CMD_FORWARD       1
 #define CMD_REVERSE       2
@@ -89,9 +72,11 @@ int notImplemented(int cmd)
 
   
 int currentPos = 0;
-int currentHeat = 0;
-int requestedHeat = 0;
-int temperatureLimit = 0;
+byte currentHeat = 0;
+byte requestedHeat0 = 0;
+byte requestedHeat1 = 0;
+byte temperatureLimit0 = 0;
+byte temperatureLimit1 = 0;
 
 void executeCommands()
 {
@@ -165,19 +150,24 @@ digitalWrite(10, 1);
     break;
 
   case CMD_SETHEAT:
-    requestedHeat = snap.getInt(1);
-    temperatureLimit = snap.getInt(3);
+    requestedHeat0 = snap.getByte(1);
+    requestedHeat1 = snap.getByte(2);
+    temperatureLimit0 = snap.getByte(3);
+    temperatureLimit1 = snap.getByte(4);
+    extruder.setTargetTemp(temperatureLimit1);
+    extruder.setHeater(requestedHeat1);
     break;
 
   case CMD_GETTEMP:
-    if (currentHeat < requestedHeat)
-      currentHeat++;
-    else if (currentHeat > requestedHeat)
+    if (currentHeat < temperatureLimit1)
+      currentHeat+=10;
+    else if (currentHeat > temperatureLimit1)
       currentHeat--;
       
     snap.sendReply();
     snap.sendDataByte(CMD_GETTEMP); 
-    snap.sendDataInt(currentHeat);
+    snap.sendDataByte(currentHeat);
+    snap.sendDataByte(0);
     snap.endMessage();
     break;
 
@@ -213,8 +203,15 @@ digitalWrite(10, 1);
     break;
 
   case CMD_GETTEMPINFO:
-    // not implemented
-    notImplemented(cmd);
+    snap.sendReply();
+    snap.sendDataByte(CMD_GETTEMPINFO); 
+    snap.sendDataByte(requestedHeat0);
+    snap.sendDataByte(requestedHeat1);
+    snap.sendDataByte(temperatureLimit0);
+    snap.sendDataByte(temperatureLimit1);
+    snap.sendDataByte(extruder.getTemp());
+    snap.sendDataByte(0);
+    snap.endMessage();
     break;
     
   default:
