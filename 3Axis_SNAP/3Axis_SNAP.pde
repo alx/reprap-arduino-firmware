@@ -134,9 +134,11 @@ void handleZInterrupt()
 void setup()
 {
   Serial.begin(19200);
-  snap.addDevice(X_ADDRESS);
-  snap.addDevice(Y_ADDRESS);
+  //snap.addDevice(X_ADDRESS);
+  //snap.addDevice(Y_ADDRESS);
   snap.addDevice(Z_ADDRESS);
+  
+  pinMode(13, OUTPUT);
 }
 
 void loop()
@@ -164,8 +166,15 @@ void receiveCommands()
   }
 }
 
+int notImplemented(int cmd)
+{
+  //digitalWrite(DEBUG_LED_PIN, HIGH);
+}
+
 void executeCommands()
 {
+  
+  
   byte cmd = snap.getByte(0);
   byte dest = snap.getDestination();
   unsigned int position;
@@ -177,6 +186,7 @@ void executeCommands()
     snap.sendDataByte(VERSION_MINOR);
     snap.sendDataByte(VERSION_MAJOR);
     snap.endMessage();
+    digitalWrite(13, HIGH);
     break;
 
   case CMD_FORWARD:
@@ -282,7 +292,6 @@ void executeCommands()
       sendDataByte((position));
       endMessage();
     */	
-
     break;
 
   case CMD_DDA:
@@ -334,7 +343,12 @@ void executeCommands()
 			
     function = func_homereset;
     break;
+    
+  default:
+    notImplemented(cmd);
+    break;
   }
+  snap.releaseLock();
 }
 
 void notifyTargetReached()
