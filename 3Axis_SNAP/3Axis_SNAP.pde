@@ -2,8 +2,8 @@
   3Axis_SNAP.pde - RepRap cartesian firmware for Arduino
 
   History:
-  * Created intial version (0.1) by Zach Smith.
-  * Initial rework (0.2) by Marius Kintel <kintel@sim.no>
+  * Created initial version (0.1) by Zach Smith.
+  * Rewrite (0.2) by Marius Kintel <kintel@sim.no> and Philipp Tiefenbacher <wizards23@gmail.com>
 
   */
 #include <SNAP.h>
@@ -96,7 +96,8 @@ SNAP snap;
 
 //what are we doing?
 int function;
-bool seekNotify = true;
+byte currdevice = 0;
+byte notify = 255;
 int dda_seekposition = 0;
 int dda_deltax = 0;
 int dda_deltay = 0;
@@ -117,7 +118,6 @@ SIGNAL(SIG_OUTPUT_COMPARE2A)
 {
   handleZInterrupt();
 }
-
 
 void handleXInterrupt()
 {
@@ -141,6 +141,8 @@ void setup()
   snap.addDevice(X_ADDRESS);
   snap.addDevice(Y_ADDRESS);
   snap.addDevice(Z_ADDRESS);
+  DDRC = 0xff;
+  PORTC = 0;
 }
 
 void loop()
@@ -151,12 +153,31 @@ void loop()
   //get our state status.
   bot.readState();
 
+  switch (function) {
+  case func_homereset: 
+    LinearAxis *axis = NULL;
+    if (currdevice == X_ADDRESS) axis = &bot.x;
+    else if (currdevice == Y_ADDRESS) axis = &bot.y;
+    else if (currdevice == Z_ADDRESS) axis = &bot.z;
+
+    if (axis) {
+      if (axis->atMin()) {
+        axis->setPosition(0);
+        function = func_idle;
+
+        if (notify != 255) {
+          PORTC |= 1;
+          notifyTargetReached();
+        }
+      }
+    }
+    break;
+  }
+
   //check to see if we need to get another point
   if (bot.atTarget()) {
-    if (seekNotify) notifyTargetReached();
     bot.getNextPoint();
   }
-  
 }
 
 void receiveCommands()
@@ -175,8 +196,6 @@ int notImplemented(int cmd)
 
 void executeCommands()
 {
-  
-  
   byte cmd = snap.getByte(0);
   byte dest = snap.getDestination();
   unsigned int position;
@@ -188,7 +207,6 @@ void executeCommands()
     snap.sendDataByte(VERSION_MINOR);
     snap.sendDataByte(VERSION_MAJOR);
     snap.endMessage();
-    //digitalWrite(13, HIGH);
     break;
 
   case CMD_FORWARD:
@@ -259,8 +277,8 @@ void executeCommands()
     break;
 
   case CMD_NOTIFY:
-    // Set seek completion (and calibration) notification
-    seekNotify = snap.getByte(1) > 0 ? true : false;
+    // Parameter is receiver of notification, or 255 if notification should be turned off
+    notify = snap.getByte(1);
     break;
 
   case CMD_SYNC:
@@ -321,15 +339,23 @@ void executeCommands()
     snap.endMessage();
     break;
 
-  case CMD_HOMERESET:
+  case CMD_HOMERESET: {
     // Seek to home position and reset (search at given speed)
-    if (dest == X_ADDRESS)      bot.x.stepper.setRPM(snap.getByte(1));
-    else if (dest == Y_ADDRESS) bot.y.stepper.setRPM(snap.getByte(1));
-    else if (dest == Z_ADDRESS) bot.z.stepper.setRPM(snap.getByte(1));
-			
-    function = func_homereset;
+    LinearAxis *axis = NULL;
+    if (dest == X_ADDRESS) axis = &bot.x;
+    else if (dest == Y_ADDRESS) axis = &bot.y;
+    else if (dest == Z_ADDRESS) axis = &bot.z;
+    if (axis) {   
+      axis->stepper.setRPM(snap.getByte(1));
+      axis->setPosition(20000);
+      axis->setTarget(0);
+      bot.start();
+
+      function = func_homereset;
+      currdevice = dest;
+    }
     break;
-    
+  }
     
   default:
     notImplemented(cmd);
@@ -340,10 +366,8 @@ void executeCommands()
 
 void notifyTargetReached()
 {
-  snap.sendMessage(0);
-  snap.sendDataByte(CMD_SEEK);
-  // FIXME: Dummy values for now
-  snap.sendDataByte(0);
+  snap.sendMessage(notify);
+  snap.sendDataByte(CMD_HOMERESET);
   snap.sendDataByte(0);
   snap.endMessage();
 }
