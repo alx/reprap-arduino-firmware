@@ -84,6 +84,7 @@ enum functions {
  ********************************/
 
 //our cartesian bot object
+
 CartesianBot bot(
                  'x', X_MOTOR_STEPS, X_DIR_PIN, X_STEP_PIN, X_MIN_PIN, X_MAX_PIN,
                  'y', Y_MOTOR_STEPS, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN,
@@ -101,6 +102,7 @@ int dda_deltax = 0;
 int dda_deltay = 0;
 byte dda_error = 0;
 
+
 SIGNAL(SIG_OUTPUT_COMPARE0A)
 {
   handleXInterrupt();
@@ -116,6 +118,7 @@ SIGNAL(SIG_OUTPUT_COMPARE2A)
   handleZInterrupt();
 }
 
+
 void handleXInterrupt()
 {
   bot.x.doStep();
@@ -130,15 +133,14 @@ void handleZInterrupt()
 {
   bot.z.doStep();
 }
+
 	
 void setup()
 {
   Serial.begin(19200);
-  //snap.addDevice(X_ADDRESS);
-  //snap.addDevice(Y_ADDRESS);
+  snap.addDevice(X_ADDRESS);
+  snap.addDevice(Y_ADDRESS);
   snap.addDevice(Z_ADDRESS);
-  
-  pinMode(13, OUTPUT);
 }
 
 void loop()
@@ -154,13 +156,14 @@ void loop()
     if (seekNotify) notifyTargetReached();
     bot.getNextPoint();
   }
+  
 }
 
 void receiveCommands()
 {
   byte cmd;
 
-  while (Serial.available() > 1) {
+  while (Serial.available() > 0) {
     cmd = Serial.read();
     snap.receiveByte(cmd);
   }
@@ -168,7 +171,6 @@ void receiveCommands()
 
 int notImplemented(int cmd)
 {
-  //digitalWrite(DEBUG_LED_PIN, HIGH);
 }
 
 void executeCommands()
@@ -186,7 +188,7 @@ void executeCommands()
     snap.sendDataByte(VERSION_MINOR);
     snap.sendDataByte(VERSION_MAJOR);
     snap.endMessage();
-    digitalWrite(13, HIGH);
+    //digitalWrite(13, HIGH);
     break;
 
   case CMD_FORWARD:
@@ -276,22 +278,6 @@ void executeCommands()
     break;
 
   case CMD_GETRANGE:
-
-    /*
-      if (dest == X_ADDRESS)
-      position = bot.x.stepper.getMaximum();
-      else if (dest == Y_ADDRESS)
-      position = bot.y.stepper.getMaximum();
-      else if (dest == Z_ADDRESS)
-      position = bot.z.stepper.getMaximum();
-
-      // Request range
-      sendReplyply();
-      sendDataByte(CMD_GETRANGE);
-      sendDataByte((position >> 8));
-      sendDataByte((position));
-      endMessage();
-    */	
     break;
 
   case CMD_DDA:
@@ -343,6 +329,7 @@ void executeCommands()
 			
     function = func_homereset;
     break;
+    
     
   default:
     notImplemented(cmd);
