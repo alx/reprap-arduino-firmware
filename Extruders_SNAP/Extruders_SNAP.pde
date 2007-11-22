@@ -1,8 +1,18 @@
+/*
+  Extruder_SNAP.pde - RepRap Thermoplastic Extruder firmware for Arduino
+
+  Main firmware for the extruder (heater, motor and temp. sensor)
+
+  History:
+  * Created intial version (0.1) by Philipp Tiefenbacher and Marius Kintel
+
+  */
+
 #include <ThermoplastExtruder.h>
 #include <SNAP.h>
 
 #define VERSION_MAJOR 0
-#define VERSION_MINOR 1
+#define VERSION_MINOR 2
 #define HOST_ADDRESS 0
 //
 // Extrude commands
@@ -52,12 +62,10 @@ void loop()
   receiveCommands();
   if (snap.packetReady()) executeCommands();
 
-  digitalWrite(8, 1);
 }
 
 void receiveCommands()
 {
-  digitalWrite(9, 1);
   while (Serial.available() > 0) {
     snap.receiveByte(Serial.read());
   }
@@ -80,17 +88,15 @@ byte temperatureLimit1 = 0;
 
 void executeCommands()
 {
-  
-digitalWrite(10, 1);
   byte cmd = snap.getByte(0);
 	
   switch (cmd) {
       
   case CMD_VERSION:
     snap.sendReply();
-    snap.sendDataByte(CMD_VERSION);    // Response type 0
-    snap.sendDataByte(VERSION_MAJOR);  // Minor
-    snap.sendDataByte(VERSION_MINOR);  // Major
+    snap.sendDataByte(CMD_VERSION);
+    snap.sendDataByte(VERSION_MINOR);
+    snap.sendDataByte(VERSION_MAJOR);
     snap.endMessage();
     break;
 
