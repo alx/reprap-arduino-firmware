@@ -39,7 +39,6 @@
 #define Z_MAX_PIN 13
 #define Z_ENABLE_PIN 16
 
-
 /********************************
  * how many steps do our motors have?
  ********************************/
@@ -98,46 +97,34 @@ CartesianBot bot(
 //our communicator object
 SNAP snap;
 
-//what are we doing?
-int function;
 byte currdevice = 0;
-byte notify = 255;
-int dda_seekposition = 0;
-int dda_deltax = 0;
-int dda_deltay = 0;
-byte dda_error = 0;
-
-
-SIGNAL(SIG_OUTPUT_COMPARE0A)
-{
-  handleXInterrupt();
-}
+byte notify;
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)
 {
-  handleYInterrupt();
-}
+	if (bot.mode == MODE_SEEK)
+	{
+		if (bot.x.can_step)
+			bot.x.doStep();
 
-SIGNAL(SIG_OUTPUT_COMPARE2A)
-{
-  handleZInterrupt();
-}
+		if (bot.y.can_step)
+			bot.y.doStep();
 
-void handleXInterrupt()
-{
-  bot.x.doStep();
-}
+		if (bot.z.can_step)
+			bot.z.doStep();
+	}
+	else if (bot.mode == MODE_DDA)
+	{
+		if (bot.x.can_step)
+			bot.x.ddaStep(bot.max_delta);
 
-void handleYInterrupt()
-{
-  bot.y.doStep();
-}
+		if (bot.y.can_step)
+			bot.y.ddaStep(bot.max_delta);
 
-void handleZInterrupt()
-{
-  bot.z.doStep();
+		if (bot.z.can_step)
+			bot.z.ddaStep(bot.max_delta);
+	}
 }
-
 	
 void setup()
 {
@@ -145,45 +132,21 @@ void setup()
   snap.addDevice(X_ADDRESS);
   snap.addDevice(Y_ADDRESS);
   snap.addDevice(Z_ADDRESS);
-  DDRC = 0xff;
-  PORTC = 0;
 }
 
 void loop()
 {
-  snap.receivePacket();
-  if (snap.packetReady())
-    executeCommands();
+	//process our commands
+	snap.receivePacket();
+	if (snap.packetReady())
+		executeCommands();
 
-  //get our state status.
-  bot.readState();
+	//get our state status.
+	bot.readState();
 
-  //TODO: replace this to handle multiple homes.
-  switch (function) {
-  case func_homereset: 
-    LinearAxis *axis = NULL;
-    if (currdevice == X_ADDRESS) axis = &bot.x;
-    else if (currdevice == Y_ADDRESS) axis = &bot.y;
-    else if (currdevice == Z_ADDRESS) axis = &bot.z;
-
-    if (axis) {
-      if (axis->atMin()) {
-        axis->setPosition(0);
-        function = func_idle;
-
-        if (notify != 255) {
-          PORTC |= 1;
-          notifyTargetReached();
-        }
-      }
-    }
-    break;
-  }
-
-  //check to see if we need to get another point
-  if (bot.atTarget()) {
-    bot.getNextPoint();
-  }
+	//if we are at our target, stop us.
+	if (bot.atTarget())
+		bot.stop();
 }
 
 int notImplemented(int cmd)
@@ -207,74 +170,123 @@ void executeCommands()
 
   case CMD_FORWARD:
     //okay, set our speed.
-    if (dest == X_ADDRESS)      bot.x.stepper.setRPM(snap.getByte(1));
-    else if (dest == Y_ADDRESS) bot.y.stepper.setRPM(snap.getByte(1));
-    else if (dest == Z_ADDRESS) bot.z.stepper.setRPM(snap.getByte(1));
+    if (dest == X_ADDRESS)
+	{
+		bot.x.stepper.setRPM(snap.getByte(1));
+		bot.x.stepper.setDirection(RS_FORWARD);
+		bot.x.function = func_forward;
+    }
+	else if (dest == Y_ADDRESS)
+	{
+		bot.y.stepper.setRPM(snap.getByte(1));
+		bot.y.stepper.setDirection(RS_FORWARD);
+		bot.y.function = func_forward;
+    }
+	else if (dest == Z_ADDRESS)
+	{
+		bot.z.stepper.setRPM(snap.getByte(1));
+		bot.z.stepper.setDirection(RS_FORWARD);
+		bot.z.function = func_forward;
+    }
 
-    function = func_forward;
     break;
 
   case CMD_REVERSE:
-    //okay, set our speed.
-    if (dest == X_ADDRESS)      bot.x.stepper.setRPM(snap.getByte(1));
-    else if (dest == Y_ADDRESS) bot.y.stepper.setRPM(snap.getByte(1));
-    else if (dest == Z_ADDRESS) bot.z.stepper.setRPM(snap.getByte(1));
-			
-    function = func_reverse;
+	if (dest == X_ADDRESS)
+	{
+		bot.x.stepper.setRPM(snap.getByte(1));
+		bot.x.stepper.setDirection(RS_REVERSE);
+		bot.x.function = func_reverse;
+	}
+	else if (dest == Y_ADDRESS)
+	{
+		bot.y.stepper.setRPM(snap.getByte(1));
+		bot.y.stepper.setDirection(RS_REVERSE);
+		bot.y.function = func_reverse;
+	}
+	else if (dest == Z_ADDRESS)
+	{
+		bot.z.stepper.setRPM(snap.getByte(1));
+		bot.z.stepper.setDirection(RS_REVERSE);
+		bot.z.function = func_reverse;
+	}
     break;
 
   case CMD_SETPOS:
     position = (snap.getByte(2) << 8) + (snap.getByte(1));
 		
-    if (dest == X_ADDRESS)      bot.x.setPosition(position);
-    else if (dest == Y_ADDRESS) bot.y.setPosition(position);
-    else if (dest == Z_ADDRESS) bot.z.setPosition(position);
+    if (dest == X_ADDRESS)
+	{
+		bot.x.setPosition(position);
+		bot.x.setTarget(position);
+	}
+	else if (dest == Y_ADDRESS) 
+	{
+		bot.y.setPosition(position);
+		bot.y.setTarget(position);
+	}
+    else if (dest == Z_ADDRESS)
+	{
+		bot.z.setPosition(position);
+		bot.z.setTarget(position);
+	}
     break;
 
   case CMD_GETPOS:
-    if (dest == X_ADDRESS)      position = bot.x.getPosition();
-    else if (dest == Y_ADDRESS) position = bot.y.getPosition();
-    else if (dest == Z_ADDRESS) position = bot.z.getPosition();
-		
-    snap.sendReply();
-    snap.sendDataByte(CMD_GETPOS);
-    snap.sendDataByte(position&0xff);
-    snap.sendDataByte(position >> 8);
-    snap.endMessage();
-    break;
+	if (dest == X_ADDRESS)      position = bot.x.getPosition();
+	else if (dest == Y_ADDRESS) position = bot.y.getPosition();
+	else if (dest == Z_ADDRESS) position = bot.z.getPosition();
+
+	snap.sendReply();
+	snap.sendDataByte(CMD_GETPOS);
+	snap.sendDataByte(position&0xff);
+	snap.sendDataByte(position >> 8);
+	snap.endMessage();
+	break;
 
   case CMD_SEEK:
     // Goto position
     position = (snap.getByte(3) << 8) + snap.getByte(2);
 
-    //okay, set our speed.
-    if (dest == X_ADDRESS) {
-      bot.x.stepper.setRPM(snap.getByte(1));
-      bot.x.setTarget(position);
-    }
-    else if (dest == Y_ADDRESS) {
-      bot.y.stepper.setRPM(snap.getByte(1));
-      bot.y.setTarget(position);
-    }
-    else if (dest == Z_ADDRESS) {
-      bot.z.stepper.setRPM(snap.getByte(1));
-      bot.z.setTarget(position);
-    }
+	//okay, set our speed.
+	if (dest == X_ADDRESS)
+	{
+		bot.x.stepper.setRPM(snap.getByte(1));
+		bot.x.setTarget(position);
+	}
+	else if (dest == Y_ADDRESS)
+	{
+		bot.y.stepper.setRPM(snap.getByte(1));
+		bot.y.setTarget(position);
+	}
+	else if (dest == Z_ADDRESS)
+	{
+		bot.z.stepper.setRPM(snap.getByte(1));
+		bot.z.setTarget(position);
+	}
 			
     //recalculate our DDA algo.
-    bot.calculateDDA();
+	bot.startSeek();
     break;
 
   case CMD_FREE:
     //this uses the undocumented feature of Arduino - pins 14-19 correspond to analog 0-9
 	if (dest == X_ADDRESS)
+	{
 		digitalWrite(X_ENABLE_PIN, LOW);
+		bot.x.function = func_idle;
+	}
 	if (dest == Y_ADDRESS)
+	{
 		digitalWrite(Y_ENABLE_PIN, LOW);
+		bot.y.function = func_idle;
+	}
 	if (dest == Z_ADDRESS)
+	{
 		digitalWrite(Z_ENABLE_PIN, LOW);
+		bot.y.function = func_idle;
+	}
 
-    function = func_idle;
     break;
 
   case CMD_NOTIFY:
@@ -283,17 +295,28 @@ void executeCommands()
     break;
 
   case CMD_SYNC:
-    // Set sync mode
+    // Set sync mode.. basically ignored since all axes are on this one arduino.
     //sync_mode = snap.getByte(1);
     break;
 
   case CMD_CALIBRATE:
     // Request calibration (search at given speed)
-    if (dest == X_ADDRESS)      bot.x.stepper.setRPM(snap.getByte(1));
-    else if (dest == Y_ADDRESS) bot.y.stepper.setRPM(snap.getByte(1));
+    if (dest == X_ADDRESS)
+	{
+		bot.x.stepper.setRPM(snap.getByte(1));
+		bot.x.function = func_findmin;
+	}
+	else if (dest == Y_ADDRESS)
+	{
+		bot.y.stepper.setRPM(snap.getByte(1));
+		bot.y.function = func_findmin;
+	}
     else if (dest == Z_ADDRESS) bot.z.stepper.setRPM(snap.getByte(1));
-		
-    function = func_findmin;
+	{
+		bot.z.stepper.setRPM(snap.getByte(1));
+		bot.z.function = func_findmin;
+	}
+	
     break;
 
   case CMD_GETRANGE:
@@ -316,15 +339,15 @@ void executeCommands()
     break;
 
   case CMD_FORWARD1:
-    if (dest == X_ADDRESS)      bot.x.stepper.moveTo(1);
-    else if (dest == Y_ADDRESS) bot.y.stepper.moveTo(1);
-    else if (dest == Z_ADDRESS) bot.z.stepper.moveTo(1);
+    if (dest == X_ADDRESS) bot.x.forward1();
+    else if (dest == Y_ADDRESS) bot.y.forward1();
+    else if (dest == Z_ADDRESS) bot.z.forward1();
     break;
 
   case CMD_BACKWARD1:
-    if (dest == X_ADDRESS)      bot.x.stepper.moveTo(-1);
-    else if (dest == Y_ADDRESS) bot.y.stepper.moveTo(-1);
-    else if (dest == Z_ADDRESS) bot.z.stepper.moveTo(-1);
+    if (dest == X_ADDRESS)      bot.x.reverse1();
+    else if (dest == Y_ADDRESS) bot.y.reverse1();
+    else if (dest == Z_ADDRESS) bot.z.reverse1();
     break;
 
   case CMD_SETPOWER:
@@ -350,9 +373,8 @@ void executeCommands()
       axis->stepper.setRPM(snap.getByte(1));
       axis->setPosition(20000);
       axis->setTarget(0);
-      bot.start();
+      bot.startSeek();
 
-      function = func_homereset;
       currdevice = dest;
     }
     break;
