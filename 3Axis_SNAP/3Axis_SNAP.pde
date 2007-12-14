@@ -98,8 +98,9 @@ CartesianBot bot(
 //our communicator object
 SNAP snap;
 
-byte currdevice = 0;
-byte notify;
+byte x_notify = 255;
+byte y_notify = 255;
+byte z_notify = 255; 
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)
 {
@@ -124,6 +125,52 @@ SIGNAL(SIG_OUTPUT_COMPARE1A)
 
 		if (bot.z.can_step)
 			bot.z.ddaStep(bot.max_delta);
+	}
+	else if (bot.mode == MODE_HOMERESET)
+	{
+		bot.x.stepper.pulse();
+						
+		if (bot.x.function == func_homereset)
+		{
+			if (!bot.x.atMin())
+				bot.x.stepper.pulse();
+			else
+			{
+				bot.x.setPosition(0);
+				bot.x.function = func_idle;
+				
+				if (x_notify != 255)
+					notifyTargetReached(x_notify, X_ADDRESS);
+			}
+		}
+
+		if (bot.y.function == func_homereset)
+		{
+			if (!bot.y.atMin())
+				bot.y.stepper.pulse();
+			else
+			{
+				bot.y.setPosition(0);
+				bot.y.function = func_idle;
+				
+				if (y_notify != 255)
+					notifyTargetReached(y_notify, Y_ADDRESS);	
+			}
+		}
+
+		if (bot.z.function == func_homereset)
+		{
+			if (!bot.z.atMin())
+				bot.z.stepper.pulse();
+			else
+			{
+				bot.z.setPosition(0);
+				bot.z.function = func_idle;
+
+				if (z_notify != 255)
+					notifyTargetReached(z_notify, Z_ADDRESS);
+			}
+		}
 	}
 }
 	
@@ -158,7 +205,7 @@ void executeCommands()
 {
 	byte cmd = snap.getByte(0);
 	byte dest = snap.getDestination();
-	unsigned int position;
+	unsigned long position;
 
 	switch (cmd)
 	{
@@ -302,7 +349,12 @@ void executeCommands()
 
 		case CMD_NOTIFY:
 			// Parameter is receiver of notification, or 255 if notification should be turned off
-			notify = snap.getByte(1);
+			if (dest == X_ADDRESS)
+				x_notify = snap.getByte(1);
+			if (dest == Y_ADDRESS)
+				y_notify = snap.getByte(1);
+			if (dest == Z_ADDRESS)
+				z_notify = snap.getByte(1);
 		break;
 
 		case CMD_SYNC:
@@ -336,19 +388,44 @@ void executeCommands()
 		break;
 
 		case CMD_DDA:
-		//     // Master a DDA
-		//     // Assumes head is already positioned correctly at x0 and extrusion
-		//     // is starting
+			unsigned long target;
+		
+			if (dest == X_ADDRESS)
+			{
+				position = (snap.getByte(3) << 8) + snap.getByte(2);
+				target = bot.y.getPosition() + ((snap.getByte(5) << 8) + snap.getByte(4));
 
-		//     dda_seekposition = (snap.getByte(3) << 8) + snap.getByte(2);
-		//     dda_deltay = (snap.getByte(5) << 8) + snap.getByte(4);
-		//     dda_error = 0;
+				bot.x.setTarget(position);
+				bot.y.setTarget(target);
+			}
+			else if (dest == Y_ADDRESS)
+			{
+				position = (snap.getByte(3) << 8) + snap.getByte(2);
+				target = bot.y.getPosition() + ((snap.getByte(5) << 8) + snap.getByte(4));
 
-		//     dda_deltax = dda_seekposition - currentPosition;
-		//     if (dda_deltax < 0) dda_deltax = -dda_deltax;
+				bot.y.setTarget(position);
+				bot.x.setTarget(target);
+			}
+			
+			//set our speed.
+			bot.x.stepper.setRPM(snap.getByte(1));
+			bot.setTimer(bot.x.stepper.getSpeed());
+			
+			//init our DDA stuff!
+			bot.calculateDDA();
+				//     // Master a DDA
+				//     // Assumes head is already positioned correctly at x0 and extrusion
+				//     // is starting
 
-		//     function = func_ddamaster;
-		//     setTimer(buffer[1]);
+				//     dda_seekposition = (snap.getByte(3) << 8) + snap.getByte(2);
+				//     dda_deltay = (snap.getByte(5) << 8) + snap.getByte(4);
+				//     dda_error = 0;
+
+				//     dda_deltax = dda_seekposition - currentPosition;
+				//     if (dda_deltax < 0) dda_deltax = -dda_deltax;
+
+				//     function = func_ddamaster;
+				//     setTimer(buffer[1]);
 		break;
 
 		case CMD_FORWARD1:
@@ -383,36 +460,49 @@ void executeCommands()
 		break;
 
 		case CMD_HOMERESET:
-			// Seek to home position and reset (search at given speed)
-			LinearAxis *axis = NULL;
-
 			if (dest == X_ADDRESS)
-				axis = &bot.x;
-			else if (dest == Y_ADDRESS)
-				axis = &bot.y;
-			else if (dest == Z_ADDRESS)
-				axis = &bot.z;
-
-			if (axis)
 			{
-				axis->stepper.setRPM(snap.getByte(1));
-				axis->setPosition(20000);
-				axis->setTarget(0);
+				//configure our axis
+				bot.x.stepper.setDirection(RS_REVERSE);
+				bot.x.stepper.setRPM(snap.getByte(1));
+				bot.setTimer(bot.x.stepper.getSpeed());
 
-				bot.setTimer(axis->stepper.getSpeed());
-				bot.startSeek();
-
-				currdevice = dest;
+				//tell our axis to go home.
+				bot.x.function = func_homereset;
 			}
+			else if (dest == Y_ADDRESS)
+			{
+				//configure our axis
+				bot.y.stepper.setDirection(RS_REVERSE);
+				bot.y.stepper.setRPM(snap.getByte(1));
+				bot.setTimer(bot.y.stepper.getSpeed());
+
+				//tell our axis to go home.
+				bot.y.function = func_homereset;
+			}
+			else if (dest == Z_ADDRESS)
+			{
+				//configure our axis
+				bot.z.stepper.setDirection(RS_REVERSE);
+				bot.z.stepper.setRPM(snap.getByte(1));
+				bot.setTimer(bot.z.stepper.getSpeed());
+
+				//tell our axis to go home.
+				bot.z.function = func_homereset;
+			}
+
+			//starts our home reset mode.
+			bot.startHomeReset();
 		break;
 	}
 
 	snap.releaseLock();
 }
 
-void notifyTargetReached()
+void notifyTargetReached(byte to, byte from)
 {
-	snap.sendMessage(notify);
+	snap.startMessage(from);
+	snap.sendMessage(to);
 	snap.sendDataByte(CMD_HOMERESET);
 	snap.sendDataByte(0);
 	snap.endMessage();
