@@ -51,35 +51,27 @@ CartesianBot bot(
                  );
 Point p;
 
-int speed = 50;
-
+int speed = 255;
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)
 {
-	if (bot.mode == MODE_SEEK)
+	if (bot.mode == MODE_DDA)
 	{
 		if (bot.x.can_step)
-			bot.x.doStep();
+			bot.x.ddaStep(bot.max_delta);
 
 		if (bot.y.can_step)
-			bot.y.doStep();
+			bot.y.ddaStep(bot.max_delta);
 
 		if (bot.z.can_step)
-			bot.z.doStep();
+			bot.z.ddaStep(bot.max_delta);
 	}
 }
 	
 void setup()
 {
-
-	bot.x.stepper.setRPM(speed);
-	bot.y.stepper.setRPM(speed);
-	bot.z.stepper.setRPM(speed);
-	bot.setTimer(bot.x.stepper.getSpeed());
-	bot.startSeek();
-	
 	Serial.begin(57600);
-	Serial.println("Starting 3 axis exerciser.");
+	Serial.println("Starting 3 axis DDA exerciser.");
 
 	Serial.print("RPM: ");
 	Serial.println(bot.x.stepper.getRPM());
@@ -87,17 +79,17 @@ void setup()
 	Serial.println(bot.x.stepper.getSpeed());
 
 	p.x = 20000;
-	p.y = 0;
-	p.z = 0;
-	bot.queuePoint(p);
-	
-	p.x = 20000;
 	p.y = 20000;
 	p.z = 0;
 	bot.queuePoint(p);
 
-	p.x = 20000;
+	p.x = 0;
 	p.y = 20000;
+	p.z = 20000;
+	bot.queuePoint(p);
+	
+	p.x = 20000;
+	p.y = 0;
 	p.z = 20000;
 	bot.queuePoint(p);
 }
@@ -110,7 +102,7 @@ void loop()
 		p.x = random(1000, 20000);
 		p.y = random(1000, 20000);
 		p.z = random(1000, 20000);
-                bot.queuePoint(p);
+        bot.queuePoint(p);
 	}
 
 	//get our state status.
@@ -119,16 +111,23 @@ void loop()
 	//if we are at our target, stop us.
 	if (bot.atTarget())
 	{
-		speed = random(1, 100);
+		//set our speed.
+		speed = random(200, 255);
 		bot.x.stepper.setRPM(speed);
 		bot.setTimer(bot.x.stepper.getSpeed());
-		bot.getNextPoint();
 
+		//diagnostics.
 		Serial.print("Setting RPM to ");
 		Serial.println(speed);
 		Serial.print("Speed is now: ");
 		Serial.println(bot.x.stepper.getSpeed());
-
+		
+		//get our next point.
+		bot.getNextPoint();
+		bot.calculateDDA();
+		bot.disableTimerInterrupt();
+		
+		//diagnostic data stuff.
 		Serial.print("Seeking to ");
 		Serial.print(bot.x.getTarget());
 		Serial.print(", ");
@@ -136,14 +135,20 @@ void loop()
 		Serial.print(", ");
 		Serial.print(bot.z.getTarget());
 		Serial.print(" at clock ");
-		Serial.println((OCR1AH << 8) + OCR1AL);
-
-		Serial.print("ocr1a high: ");	
-		Serial.println(OCR1AH, DEC);
-		Serial.print("ocr1a low: ");	
-		Serial.println(OCR1AL, DEC);
-		Serial.print("ocr1a: ");
 		Serial.println((int)OCR1A);
+
+		//dda diagnostics
+		Serial.println("DDA info");
+		Serial.print("Deltas: ");
+		Serial.print(bot.x.delta);
+		Serial.print(", ");
+		Serial.print(bot.y.delta);
+		Serial.print(", ");
+		Serial.println(bot.z.delta);
+		Serial.print("Max Delta: ");
+		Serial.println(bot.max_delta);
+
+		bot.enableTimerInterrupt();
 	}
 	
 	//uncomment this if you want to find out what your status is.
