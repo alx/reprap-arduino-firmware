@@ -71,6 +71,7 @@ SIGNAL(SIG_OUTPUT_COMPARE1A)
 	
 void setup()
 {
+	bot.setupTimerInterrupt();
 
 	bot.x.stepper.setRPM(speed);
 	bot.y.stepper.setRPM(speed);

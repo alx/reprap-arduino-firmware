@@ -315,6 +315,8 @@ SIGNAL(SIG_OUTPUT_COMPARE1A)
 	
 void setup()
 {
+	bot.setupTimerInterrupt();
+
 	Serial.begin(19200);
 	snap.addDevice(X_ADDRESS);
 	snap.addDevice(Y_ADDRESS);

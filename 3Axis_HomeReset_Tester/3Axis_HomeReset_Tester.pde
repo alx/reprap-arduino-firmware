@@ -125,6 +125,8 @@ SIGNAL(SIG_OUTPUT_COMPARE1A)
 	
 void setup()
 {
+	bot.setupTimerInterrupt();
+
 	Serial.begin(57600);
 	Serial.println("Starting 3 axis home reset exerciser.");
 
