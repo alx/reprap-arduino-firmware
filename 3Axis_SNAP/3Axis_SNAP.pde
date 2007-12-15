@@ -85,6 +85,18 @@ enum functions {
 };
 
 /********************************
+ *  Sync mode declarations
+ ********************************/
+enum sync_modes {
+  sync_none,     // no sync (default)
+  sync_seek,     // synchronised seeking
+  sync_inc,      // inc motor on each pulse
+  sync_dec       // dec motor on each pulse
+};
+byte x_sync_mode = sync_none;
+byte y_sync_mode = sync_none;
+
+/********************************
  *  Global variable declarations
  ********************************/
 
@@ -100,36 +112,63 @@ SNAP snap;
 
 byte x_notify = 255;
 byte y_notify = 255;
-byte z_notify = 255; 
+byte z_notify = 255;
+
+//uncomment this define to enable the debug mode.
+#define DEBUG_MODE
+#ifdef DEBUG_MODE
+	#include <SoftwareSerial.h>
+	#define DEBUG_RX_PIN 14
+	#define DEBUG_TX_PIN 15
+	SoftwareSerial debug =  SoftwareSerial(DEBUG_RX_PIN, DEBUG_TX_PIN);
+#endif
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)
 {
+	bot.readState();
+	
 	if (bot.mode == MODE_SEEK)
 	{
 		if (bot.x.can_step)
 			bot.x.doStep();
+		if (bot.x.atTarget() && x_notify != 255)
+			notifySeek(x_notify, X_ADDRESS, (int)bot.x.getPosition());
 
 		if (bot.y.can_step)
 			bot.y.doStep();
+		if (bot.y.atTarget() && y_notify != 255)
+			notifySeek(y_notify, Y_ADDRESS, (int)bot.y.getPosition());
 
 		if (bot.z.can_step)
 			bot.z.doStep();
+		if (bot.z.atTarget() && z_notify != 255)
+			notifySeek(z_notify, Z_ADDRESS, (int)bot.z.getPosition());
+			
+		if (bot.atTarget())
+			bot.stop();
 	}
 	else if (bot.mode == MODE_DDA)
 	{
 		if (bot.x.can_step)
 			bot.x.ddaStep(bot.max_delta);
-
+		
 		if (bot.y.can_step)
 			bot.y.ddaStep(bot.max_delta);
+			
+		//z-axis not supported in v1.0 of comms.	
 
-		if (bot.z.can_step)
-			bot.z.ddaStep(bot.max_delta);
+		if (bot.atTarget())
+		{
+			if (x_notify != 255)
+				notifyDDA(x_notify, X_ADDRESS, (int)bot.x.getPosition());
+			if (y_notify != 255)
+				notifyDDA(y_notify, Y_ADDRESS, (int)bot.y.getPosition());
+			
+			bot.stop();
+		}
 	}
 	else if (bot.mode == MODE_HOMERESET)
 	{
-		bot.x.stepper.pulse();
-						
 		if (bot.x.function == func_homereset)
 		{
 			if (!bot.x.atMin())
@@ -138,9 +177,10 @@ SIGNAL(SIG_OUTPUT_COMPARE1A)
 			{
 				bot.x.setPosition(0);
 				bot.x.function = func_idle;
+				bot.stop();
 				
 				if (x_notify != 255)
-					notifyTargetReached(x_notify, X_ADDRESS);
+					notifyHomeReset(x_notify, X_ADDRESS);
 			}
 		}
 
@@ -152,9 +192,10 @@ SIGNAL(SIG_OUTPUT_COMPARE1A)
 			{
 				bot.y.setPosition(0);
 				bot.y.function = func_idle;
+				bot.stop();
 				
 				if (y_notify != 255)
-					notifyTargetReached(y_notify, Y_ADDRESS);	
+					notifyHomeReset(y_notify, Y_ADDRESS);	
 			}
 		}
 
@@ -166,9 +207,107 @@ SIGNAL(SIG_OUTPUT_COMPARE1A)
 			{
 				bot.z.setPosition(0);
 				bot.z.function = func_idle;
+				bot.stop();
 
 				if (z_notify != 255)
-					notifyTargetReached(z_notify, Z_ADDRESS);
+					notifyHomeReset(z_notify, Z_ADDRESS);
+			}
+		}
+	}
+	else if (bot.mode == MODE_FIND_MIN)
+	{
+		if (bot.x.function == func_findmin)
+		{
+			if (!bot.x.atMin())
+				bot.x.stepper.pulse();
+			else
+			{
+				bot.x.setPosition(0);
+				bot.x.stepper.setDirection(RS_FORWARD);
+				bot.x.function = func_findmax;
+				bot.mode = MODE_FIND_MAX;
+			}
+		}
+
+		if (bot.y.function == func_findmin)
+		{
+			if (!bot.y.atMin())
+				bot.y.stepper.pulse();
+			else
+			{
+				bot.y.setPosition(0);
+				bot.y.stepper.setDirection(RS_FORWARD);
+				bot.y.function = func_findmax;
+				bot.mode = MODE_FIND_MAX;
+			}
+		}
+
+		if (bot.z.function == func_findmin)
+		{
+			if (!bot.z.atMin())
+				bot.z.stepper.pulse();
+			else
+			{
+				bot.z.setPosition(0);
+				bot.z.stepper.setDirection(RS_FORWARD);
+				bot.z.function = func_findmax;
+				bot.mode = MODE_FIND_MAX;
+			}
+		}
+	}
+	else if (bot.mode == MODE_FIND_MAX)
+	{
+		if (bot.x.function == func_findmax)
+		{
+			//do a step if we're not there yet.
+			if (!bot.x.atMax())
+				bot.x.doStep();
+			
+			//are we there yet?
+			if (bot.x.atMax())
+			{
+				bot.x.setMax(bot.x.getPosition());
+				bot.x.function = func_idle;
+				bot.stop();
+				
+				if (x_notify != 255)
+					notifyCalibrate(x_notify, X_ADDRESS, bot.x.getMax());
+			}
+		}
+		
+		if (bot.y.function == func_findmax)
+		{
+			//do a step if we're not there yet.
+			if (!bot.y.atMax())
+				bot.y.doStep();
+			
+			//are we there yet?
+			if (bot.y.atMax())
+			{
+				bot.y.setMax(bot.y.getPosition());
+				bot.y.function = func_idle;
+				bot.stop();
+				
+				if (x_notify != 255)
+					notifyCalibrate(x_notify, X_ADDRESS, bot.y.getMax());
+			}
+		}
+		
+		if (bot.z.function == func_findmax)
+		{
+			//do a step if we're not there yet.
+			if (!bot.z.atMax())
+				bot.z.doStep();
+			
+			//are we there yet?
+			if (bot.z.atMax())
+			{
+				bot.z.setMax(bot.z.getPosition());
+				bot.z.function = func_idle;
+				bot.stop();
+				
+				if (x_notify != 255)
+					notifyCalibrate(x_notify, X_ADDRESS, bot.z.getMax());
 			}
 		}
 	}
@@ -180,10 +319,19 @@ void setup()
 	snap.addDevice(X_ADDRESS);
 	snap.addDevice(Y_ADDRESS);
 	snap.addDevice(Z_ADDRESS);
+
+	bot.stop();
+
+	#ifdef DEBUG_MODE
+		pinMode(DEBUG_RX_PIN, INPUT);
+		pinMode(DEBUG_TX_PIN, OUTPUT);
+		debug.begin(2400);
+		debug.println("Debug active.");
+	#endif
 }
 
 void loop()
-{
+{	
 	//process our commands
 	snap.receivePacket();
 	if (snap.packetReady())
@@ -193,8 +341,8 @@ void loop()
 	bot.readState();
 
 	//if we are at our target, stop us.
-	if (bot.atTarget())
-		bot.stop();
+//	if (bot.atTarget())
+//		bot.stop();
 }
 
 int notImplemented(int cmd)
@@ -296,7 +444,7 @@ void executeCommands()
 
 			snap.sendReply();
 			snap.sendDataByte(CMD_GETPOS);
-			snap.sendDataByte(position&0xff);
+			snap.sendDataByte(position & 0xff);
 			snap.sendDataByte(position >> 8);
 			snap.endMessage();
 		break;
@@ -358,11 +506,17 @@ void executeCommands()
 		break;
 
 		case CMD_SYNC:
-			// Set sync mode.. basically ignored since all axes are on this one arduino.
-			//sync_mode = snap.getByte(1);
+			// Set sync mode.. used to determine which direction to move slave stepper
+			if (dest == X_ADDRESS)
+				x_sync_mode = snap.getByte(1);
+			else if (dest == Y_ADDRESS)
+				y_sync_mode = snap.getByte(1);
 		break;
 
 		case CMD_CALIBRATE:
+			//stop other stuff.
+			bot.stop();
+		
 			// Request calibration (search at given speed)
 			if (dest == X_ADDRESS)
 			{
@@ -382,30 +536,83 @@ void executeCommands()
 				bot.setTimer(bot.z.stepper.getSpeed());
 				bot.z.function = func_findmin;
 			}
+			
+			//start our calibration.
+			bot.startCalibration();
 		break;
 
 		case CMD_GETRANGE:
+			if (dest == X_ADDRESS)
+				position = bot.x.getMax();
+			else if (dest == Y_ADDRESS)
+				position = bot.y.getMax();
+			else if (dest == Z_ADDRESS)
+				position = bot.z.getMax();
+
+			//tell the host.
+			snap.sendReply();
+			snap.sendDataByte(CMD_GETPOS);
+			snap.sendDataInt(position);
+			snap.endMessage();
 		break;
 
 		case CMD_DDA:
 			unsigned long target;
-		
+
+			//stop the bot.
+			bot.stop();
+			
+			//get our coords.
+			position = snap.getInt(2);
+			target = snap.getInt(4);
+			
+			//which axis is leading?
 			if (dest == X_ADDRESS)
 			{
-				position = (snap.getByte(3) << 8) + snap.getByte(2);
-				target = bot.y.getPosition() + ((snap.getByte(5) << 8) + snap.getByte(4));
-
+				debug.println("x master");
 				bot.x.setTarget(position);
-				bot.y.setTarget(target);
+				
+				//we can figure out the target based on the sync mode
+				if (y_sync_mode == sync_inc)
+					bot.y.setTarget(bot.y.getPosition() + target);
+				else
+					bot.y.setTarget(bot.y.getPosition() - target);
 			}
 			else if (dest == Y_ADDRESS)
 			{
-				position = (snap.getByte(3) << 8) + snap.getByte(2);
-				target = bot.y.getPosition() + ((snap.getByte(5) << 8) + snap.getByte(4));
-
+				debug.println("y master");
 				bot.y.setTarget(position);
 				bot.x.setTarget(target);
+
+				//we can figure out the target based on the sync mode
+				if (x_sync_mode == sync_inc)
+					bot.x.setTarget(bot.x.getPosition() + target);
+				else
+					bot.x.setTarget(bot.x.getPosition() - target);
 			}
+			
+			debug.print("position: ");
+			debug.println(position);
+			debug.print("target: ");
+			debug.println(target);
+	
+			debug.print("x: ");
+			debug.print((int)bot.x.getPosition());
+			debug.print(" -> ");
+			debug.println((int)bot.x.getTarget());
+
+			debug.print("y: ");
+			debug.print((int)bot.y.getPosition());
+			debug.print(" -> ");
+			debug.println((int)bot.y.getTarget());
+			
+			debug.print("x notify: ");
+			debug.println(x_notify, DEC);
+			debug.print("y notify: ");
+			debug.println(y_notify, DEC);
+			
+			//set z's target to itself.
+			bot.z.setTarget(bot.z.getPosition());
 			
 			//set our speed.
 			bot.x.stepper.setRPM(snap.getByte(1));
@@ -413,19 +620,6 @@ void executeCommands()
 			
 			//init our DDA stuff!
 			bot.calculateDDA();
-				//     // Master a DDA
-				//     // Assumes head is already positioned correctly at x0 and extrusion
-				//     // is starting
-
-				//     dda_seekposition = (snap.getByte(3) << 8) + snap.getByte(2);
-				//     dda_deltay = (snap.getByte(5) << 8) + snap.getByte(4);
-				//     dda_error = 0;
-
-				//     dda_deltax = dda_seekposition - currentPosition;
-				//     if (dda_deltax < 0) dda_deltax = -dda_deltax;
-
-				//     function = func_ddamaster;
-				//     setTimer(buffer[1]);
 		break;
 
 		case CMD_FORWARD1:
@@ -460,6 +654,8 @@ void executeCommands()
 		break;
 
 		case CMD_HOMERESET:
+			bot.stop();
+		
 			if (dest == X_ADDRESS)
 			{
 				//configure our axis
@@ -490,20 +686,66 @@ void executeCommands()
 				//tell our axis to go home.
 				bot.z.function = func_homereset;
 			}
-
+			
 			//starts our home reset mode.
 			bot.startHomeReset();
+
 		break;
 	}
 
 	snap.releaseLock();
 }
 
-void notifyTargetReached(byte to, byte from)
+void notifyHomeReset(byte to, byte from)
 {
+	debug.print(from, DEC);
+	debug.println(" at home");
+	
 	snap.startMessage(from);
 	snap.sendMessage(to);
 	snap.sendDataByte(CMD_HOMERESET);
-	snap.sendDataByte(0);
 	snap.endMessage();
 }
+
+void notifyCalibrate(byte to, byte from, unsigned int position)
+{
+	debug.print("calibrate: ");
+	debug.print(from, DEC);
+	debug.print(" at ");
+	debug.println((int)position, DEC);
+	
+	snap.startMessage(from);
+	snap.sendMessage(to);
+	snap.sendDataByte(CMD_CALIBRATE);
+	snap.sendDataInt(position);
+	snap.endMessage();	
+}
+
+void notifySeek(byte to, byte from, unsigned int position)
+{
+	debug.print("seek: ");
+	debug.print(from, DEC);
+	debug.print(" at ");
+	debug.println((int)position, DEC);
+
+	snap.startMessage(from);
+	snap.sendMessage(to);
+	snap.sendDataByte(CMD_SEEK);
+	snap.sendDataInt(position);
+	snap.endMessage();
+}
+
+void notifyDDA(byte to, byte from, unsigned int position)
+{
+	debug.print("dda: ");
+	debug.print(from, DEC);
+	debug.print(" at ");
+	debug.println((int)position, DEC);
+	
+	snap.startMessage(from);
+	snap.sendMessage(to);
+	snap.sendDataByte(CMD_DDA);
+	snap.sendDataInt(position);
+	snap.endMessage();
+}
+

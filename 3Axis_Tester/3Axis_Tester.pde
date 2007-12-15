@@ -51,7 +51,7 @@ CartesianBot bot(
                  );
 Point p;
 
-int speed = 50;
+int speed = 200;
 
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)
@@ -86,19 +86,19 @@ void setup()
 	Serial.print("Speed: ");
 	Serial.println(bot.x.stepper.getSpeed());
 
-	p.x = 20000;
+	p.x = 6000;
 	p.y = 0;
 	p.z = 0;
 	bot.queuePoint(p);
 	
-	p.x = 20000;
-	p.y = 20000;
+	p.x = 6000;
+	p.y = 6000;
 	p.z = 0;
 	bot.queuePoint(p);
 
-	p.x = 20000;
-	p.y = 20000;
-	p.z = 20000;
+	p.x = 6000;
+	p.y = 6000;
+	p.z = 6000;
 	bot.queuePoint(p);
 }
 
@@ -119,7 +119,7 @@ void loop()
 	//if we are at our target, stop us.
 	if (bot.atTarget())
 	{
-		speed = random(1, 100);
+		speed = random(200, 255);
 		bot.x.stepper.setRPM(speed);
 		bot.setTimer(bot.x.stepper.getSpeed());
 		bot.getNextPoint();
@@ -136,13 +136,6 @@ void loop()
 		Serial.print(", ");
 		Serial.print(bot.z.getTarget());
 		Serial.print(" at clock ");
-		Serial.println((OCR1AH << 8) + OCR1AL);
-
-		Serial.print("ocr1a high: ");	
-		Serial.println(OCR1AH, DEC);
-		Serial.print("ocr1a low: ");	
-		Serial.println(OCR1AL, DEC);
-		Serial.print("ocr1a: ");
 		Serial.println((int)OCR1A);
 	}
 	
