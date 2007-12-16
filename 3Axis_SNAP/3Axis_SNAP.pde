@@ -417,7 +417,7 @@ void executeCommands()
 		break;
 
 		case CMD_SETPOS:
-			position = (snap.getByte(2) << 8) + (snap.getByte(1));
+			position = ((snap.getByte(2) << 8) + (snap.getByte(1)));
 
 			if (dest == X_ADDRESS)
 			{
@@ -453,7 +453,7 @@ void executeCommands()
 
 		case CMD_SEEK:
 			// Goto position
-			position = (snap.getByte(3) << 8) + snap.getByte(2);
+			position = ((snap.getByte(3) << 8) + snap.getByte(2));
 
 			//okay, set our speed.
 			if (dest == X_ADDRESS)
@@ -475,7 +475,7 @@ void executeCommands()
 				bot.z.setTarget(position);
 			}
 
-			//recalculate our DDA algo.
+			//start our seek.
 			bot.startSeek();
 	    break;
 
@@ -532,7 +532,7 @@ void executeCommands()
 				bot.setTimer(bot.y.stepper.getSpeed());
 				bot.y.function = func_findmin;
 			}
-			else if (dest == Z_ADDRESS) bot.z.stepper.setRPM(snap.getByte(1));
+			else if (dest == Z_ADDRESS)
 			{
 				bot.z.stepper.setRPM(snap.getByte(1));
 				bot.setTimer(bot.z.stepper.getSpeed());

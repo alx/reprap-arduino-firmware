@@ -6,7 +6,7 @@
   History:
   * Created intial version (0.1) by Philipp Tiefenbacher and Marius Kintel
 
-  */
+*/
 
 #include <ThermoplastExtruder.h>
 #include <SNAP.h>
@@ -46,38 +46,45 @@
 SNAP snap;
 ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_THERMISTOR_PIN);
 
+//uncomment this define to enable the debug mode.
+#define DEBUG_MODE
+#ifdef DEBUG_MODE
+	#include <SoftwareSerial.h>
+	#define DEBUG_RX_PIN 14
+	#define DEBUG_TX_PIN 15
+	SoftwareSerial debug =  SoftwareSerial(DEBUG_RX_PIN, DEBUG_TX_PIN);
+#endif
+
 void setup()
 {
-  Serial.begin(19200);
-  snap.addDevice(8);
-  for (byte i=8;i<14;i++) {
-    pinMode(i, OUTPUT);
-    digitalWrite(i, 0);
-  }
-  pinMode(DEBUG_LED_PIN, OUTPUT);
+	Serial.begin(19200);
+
+	snap.addDevice(8);
+
+	for (byte i=8;i<14;i++)
+	{
+		pinMode(i, OUTPUT);
+		digitalWrite(i, 0);
+	}
+	
+	#ifdef DEBUG_MODE
+		pinMode(DEBUG_RX_PIN, INPUT);
+		pinMode(DEBUG_TX_PIN, OUTPUT);
+		debug.begin(2400);
+		debug.println("Debug active.");
+	#endif
 }
 
 void loop()
 {
-  receiveCommands();
-  if (snap.packetReady()) executeCommands();
+	//process our commands
+	snap.receivePacket();
+	if (snap.packetReady())
+		executeCommands();
 
+	//manage our temperature
+	extruder.manageTemp();
 }
-
-void receiveCommands()
-{
-  while (Serial.available() > 0) {
-    snap.receiveByte(Serial.read());
-  }
-}
-
-
-
-int notImplemented(int cmd)
-{
-  digitalWrite(DEBUG_LED_PIN, HIGH);
-}
-
   
 int currentPos = 0;
 byte currentHeat = 0;
@@ -88,143 +95,124 @@ byte temperatureLimit1 = 0;
 
 void executeCommands()
 {
-  byte cmd = snap.getByte(0);
-	
-  switch (cmd) {
-      
-  case CMD_VERSION:
-    snap.sendReply();
-    snap.sendDataByte(CMD_VERSION);
-    snap.sendDataByte(VERSION_MINOR);
-    snap.sendDataByte(VERSION_MAJOR);
-    snap.endMessage();
-    break;
+	byte cmd = snap.getByte(0);
 
-// Extrude speed takes precedence over fan speed
-  case CMD_FORWARD:
-    extruder.setSpeed(snap.getByte(1));
-    break;
+	switch (cmd)
+	{
+		case CMD_VERSION:
+			snap.sendReply();
+			snap.sendDataByte(CMD_VERSION);
+			snap.sendDataByte(VERSION_MINOR);
+			snap.sendDataByte(VERSION_MAJOR);
+			snap.endMessage();
+		break;
 
-  // seems to do the same as Forward
-  case CMD_REVERSE:
-    // not implemented
-    notImplemented(cmd);
-    break;
+		// Extrude speed takes precedence over fan speed
+		case CMD_FORWARD:
+			extruder.setDirection(1);
+			extruder.setSpeed(snap.getByte(1));
+		break;
 
-  case CMD_SETPOS:
-    // not implemented
-    notImplemented(cmd);
-    
-    currentPos = snap.getInt(1);
-    break;
+		// seems to do the same as Forward
+		case CMD_REVERSE:
+			extruder.setDirection(0);
+			extruder.setSpeed(snap.getByte(1));
+		break;
 
-  case CMD_GETPOS:
-    // not implemented
-    notImplemented(cmd);
-    
-    //send some Bogus data so the Host software is happy
-    snap.sendReply();
-    snap.sendDataByte(CMD_GETPOS); 
-    snap.sendDataInt(currentPos);
-    snap.endMessage();
-    break;
+		case CMD_SETPOS:
+			currentPos = snap.getInt(1);
+		break;
 
-  case CMD_SEEK:
-    // not implemented
-    notImplemented(cmd);
-    break;
+		case CMD_GETPOS:
+			//send some Bogus data so the Host software is happy
+			snap.sendReply();
+			snap.sendDataByte(CMD_GETPOS); 
+			snap.sendDataInt(currentPos);
+			snap.endMessage();
+		break;
 
-  case CMD_FREE:
-    // Free motor.  There is no torque hold for a DC motor,
-    // so all we do is switch off
-    extruder.setSpeed(0);
-    break;
+		case CMD_SEEK:
+			debug.println("n/i: seek");
+		break;
 
-  case CMD_NOTIFY:
-    // not implemented
-    notImplemented(cmd);
-    break;
+		case CMD_FREE:
+			// Free motor.  There is no torque hold for a DC motor,
+			// so all we do is switch off
+			extruder.setSpeed(0);
+		break;
 
-  case CMD_ISEMPTY:
-    // not implemented
-    notImplemented(cmd);
-    // We don't know so we say we're ot empty
-    snap.sendReply();
-    snap.sendDataByte(CMD_ISEMPTY); 
-    snap.sendDataByte(0);  
-    snap.endMessage();
-    break;
+		case CMD_NOTIFY:
+			debug.println("n/i: notify");
+		break;
 
-  case CMD_SETHEAT:
-    requestedHeat0 = snap.getByte(1);
-    requestedHeat1 = snap.getByte(2);
-    temperatureLimit0 = snap.getByte(3);
-    temperatureLimit1 = snap.getByte(4);
-    extruder.setTargetTemp(temperatureLimit1);
-    extruder.setHeater(requestedHeat1);
-    break;
+		case CMD_ISEMPTY:
+			debug.println("n/i: is empty?");
 
-  case CMD_GETTEMP:
-    if (currentHeat < temperatureLimit1)
-      currentHeat+=10;
-    else if (currentHeat > temperatureLimit1)
-      currentHeat--;
-      
-    snap.sendReply();
-    snap.sendDataByte(CMD_GETTEMP); 
-    snap.sendDataByte(currentHeat);
-    snap.sendDataByte(0);
-    snap.endMessage();
-    break;
+			// We don't know so we say we're ot empty
+			snap.sendReply();
+			snap.sendDataByte(CMD_ISEMPTY); 
+			snap.sendDataByte(0);  
+			snap.endMessage();
+		break;
 
-  case CMD_SETCOOLER:
-    // not implemented
-    notImplemented(cmd);
-    break;
+		case CMD_SETHEAT:
+			requestedHeat0 = snap.getByte(1);
+			requestedHeat1 = snap.getByte(2);
+			temperatureLimit0 = snap.getByte(3);
+			temperatureLimit1 = snap.getByte(4);
+			extruder.setTargetTemp(temperatureLimit1);
+			extruder.setHeater(requestedHeat1);
+		break;
 
-// "Hidden" low level commands
-  case CMD_PWMPERIOD:
-    // not implemented
-    notImplemented(cmd);
-    break;
+		case CMD_GETTEMP:
+			if (currentHeat < temperatureLimit1)
+				currentHeat+=10;
+			else if (currentHeat > temperatureLimit1)
+				currentHeat--;
 
-  case CMD_PRESCALER:
-    // not implemented
-    notImplemented(cmd);
-    break;
+			snap.sendReply();
+			snap.sendDataByte(CMD_GETTEMP); 
+			snap.sendDataByte(currentHeat);
+			snap.sendDataByte(0);
+			snap.endMessage();
+		break;
 
-  case CMD_SETVREF:
-    // not implemented
-    notImplemented(cmd);
-    break;
+		case CMD_SETCOOLER:
+			debug.println("n/i: set cooler");
+		break;
 
-  case CMD_SETTEMPSCALER:
-    // not implemented
-    notImplemented(cmd);
-    break;
+		// "Hidden" low level commands
+		case CMD_PWMPERIOD:
+			debug.println("n/i: pwm period");
+		break;
 
-  case CMD_GETDEBUGINFO:
-    // not implemented
-    notImplemented(cmd);
-    break;
+		case CMD_PRESCALER:
+			debug.println("n/i: prescaler");
+		break;
 
-  case CMD_GETTEMPINFO:
-    snap.sendReply();
-    snap.sendDataByte(CMD_GETTEMPINFO); 
-    snap.sendDataByte(requestedHeat0);
-    snap.sendDataByte(requestedHeat1);
-    snap.sendDataByte(temperatureLimit0);
-    snap.sendDataByte(temperatureLimit1);
-    snap.sendDataByte(extruder.getTemp());
-    snap.sendDataByte(0);
-    snap.endMessage();
-    break;
-    
-  default:
-    notImplemented(cmd);
-    break;
-					
-  }
-  snap.releaseLock();
+		case CMD_SETVREF:
+			debug.println("n/i: set vref");
+		break;
+
+		case CMD_SETTEMPSCALER:
+			debug.println("n/i: set temp scaler");
+		break;
+
+		case CMD_GETDEBUGINFO:
+			debug.println("n/i: get debug info");
+		break;
+
+		case CMD_GETTEMPINFO:
+			snap.sendReply();
+			snap.sendDataByte(CMD_GETTEMPINFO); 
+			snap.sendDataByte(requestedHeat0);
+			snap.sendDataByte(requestedHeat1);
+			snap.sendDataByte(temperatureLimit0);
+			snap.sendDataByte(temperatureLimit1);
+			snap.sendDataByte(extruder.getTemp());
+			snap.sendDataByte(0);
+			snap.endMessage();
+		break;
+	}
+	snap.releaseLock();
 }
-

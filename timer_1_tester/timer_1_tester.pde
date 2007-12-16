@@ -57,33 +57,37 @@ unsigned int timer = 0;
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)
 {
-//  Serial.print("i");
+	bot.x.stepper.pulse();
+	bot.y.stepper.pulse();
+	bot.z.stepper.pulse();
 }
 
 void setup()
 {
     bot.setupTimerInterrupt();
-    bot.enableTimerInterrupt();
 	
     Serial.begin(57600);
     Serial.println("Starting timer tester.");
     
     for (int i=1; i<500; i++)
     {
-	bot.x.stepper.setRPM(i);
-	bot.setTimer(bot.x.stepper.getSpeed());
+	    bot.enableTimerInterrupt();
+		bot.x.stepper.setRPM(i);
+		bot.setTimer(bot.x.stepper.getSpeed());
 
-	Serial.print("RPM: ");
-	Serial.println(bot.x.stepper.getRPM());
-	Serial.print("Speed: ");
-	Serial.println(bot.x.stepper.getSpeed());
-        Serial.print("Resolution: ");
-        Serial.println(bot.getTimerResolution(bot.x.stepper.getSpeed()), DEC);
-        Serial.print("OCR1A: ");
-        Serial.println(OCR1A, DEC);
-        Serial.println(" ");
-        
-        delay(2000);
+		Serial.print("RPM: ");
+		Serial.println(bot.x.stepper.getRPM(), DEC);
+		Serial.print("Speed: ");
+		Serial.println(bot.x.stepper.getSpeed(), DEC);
+		Serial.print("Resolution: ");
+		Serial.println(bot.getTimerResolution(bot.x.stepper.getSpeed()), DEC);
+		Serial.print("OCR1A: ");
+		Serial.println(OCR1A, DEC);
+		Serial.println(" ");
+
+		delay(5000);
+		bot.disableTimerInterrupt();
+		delay(500);
     }
 }
 
