@@ -36,10 +36,8 @@
 #define CMD_GETDEBUGINFO  54
 #define CMD_GETTEMPINFO   55
 
-#define DEBUG_LED_PIN 13
-
-#define EXTRUDER_MOTOR_DIR_PIN    4
 #define EXTRUDER_MOTOR_SPEED_PIN  3
+#define EXTRUDER_MOTOR_DIR_PIN    4
 #define EXTRUDER_HEATER_PIN       5
 #define EXTRUDER_THERMISTOR_PIN   0
 
@@ -50,9 +48,9 @@ ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, E
 #define DEBUG_MODE
 #ifdef DEBUG_MODE
 	#include <SoftwareSerial.h>
-	#define DEBUG_RX_PIN 14
-	#define DEBUG_TX_PIN 15
-	SoftwareSerial debug =  SoftwareSerial(DEBUG_RX_PIN, DEBUG_TX_PIN);
+	#define DEBUG_RX_PIN 10
+	#define DEBUG_TX_PIN 11
+	SoftwareSerial debug = SoftwareSerial(DEBUG_RX_PIN, DEBUG_TX_PIN);
 #endif
 
 void setup()
@@ -70,7 +68,7 @@ void setup()
 	#ifdef DEBUG_MODE
 		pinMode(DEBUG_RX_PIN, INPUT);
 		pinMode(DEBUG_TX_PIN, OUTPUT);
-		debug.begin(2400);
+		debug.begin(4800);
 		debug.println("Debug active.");
 	#endif
 }
@@ -83,7 +81,7 @@ void loop()
 		executeCommands();
 
 	//manage our temperature
-	extruder.manageTemp();
+	extruder.manageTemperature();
 }
   
 int currentPos = 0;
@@ -146,9 +144,7 @@ void executeCommands()
 		break;
 
 		case CMD_ISEMPTY:
-			debug.println("n/i: is empty?");
-
-			// We don't know so we say we're ot empty
+			// We don't know so we say we're not empty
 			snap.sendReply();
 			snap.sendDataByte(CMD_ISEMPTY); 
 			snap.sendDataByte(0);  
@@ -160,19 +156,27 @@ void executeCommands()
 			requestedHeat1 = snap.getByte(2);
 			temperatureLimit0 = snap.getByte(3);
 			temperatureLimit1 = snap.getByte(4);
-			extruder.setTargetTemp(temperatureLimit1);
+			extruder.setTargetTemperature(temperatureLimit1);
 			extruder.setHeater(requestedHeat1);
+
+			debug.print("requestedHeat0: ");
+			debug.println(requestedHeat0);
+			debug.print("requestedHeat1: ");
+			debug.println(requestedHeat1);
+			debug.print("temperatureLimit0: ");
+			debug.println(temperatureLimit0);
+			debug.print("temperatureLimit1: ");
+			debug.println(temperatureLimit1);
 		break;
 
 		case CMD_GETTEMP:
-			if (currentHeat < temperatureLimit1)
-				currentHeat+=10;
-			else if (currentHeat > temperatureLimit1)
-				currentHeat--;
-
+			debug.print("temp: ");
+			debug.println(extruder.getTemperature(), DEC);
+			debug.print("raw: ");
+			debug.println(extruder.getRawTemperature(), DEC);
 			snap.sendReply();
 			snap.sendDataByte(CMD_GETTEMP); 
-			snap.sendDataByte(currentHeat);
+			snap.sendDataByte(extruder.getTemperature());
 			snap.sendDataByte(0);
 			snap.endMessage();
 		break;
@@ -209,7 +213,7 @@ void executeCommands()
 			snap.sendDataByte(requestedHeat1);
 			snap.sendDataByte(temperatureLimit0);
 			snap.sendDataByte(temperatureLimit1);
-			snap.sendDataByte(extruder.getTemp());
+			snap.sendDataByte(extruder.getTemperature());
 			snap.sendDataByte(0);
 			snap.endMessage();
 		break;
