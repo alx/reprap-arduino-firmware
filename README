@@ -1,0 +1,49 @@
+This zip file contains firmware and libraries designed to run on an Arduino, or Arduino clone. It contains all the files you should need to get everything up and running, as well as some test firmware to let you test various parts of your system.
+
+All documentation on the electronics themselves are located at http://make.rrrf.org/electronics-2.0
+
+Here is an explanation of the various files contained:
+
+/library
+
+all the folders contained in this directory need to be copied into the library folder of your Arduino installation.  on Arduino 10, this is arduino-0010/hardware/libraries.
+
+/snap
+
+these are the firmwares that you would actually upload to the Arduino itself.  each folder is a 'sketch' that you open with the Arduino software and load onto your board.  the top of each file contains pin definitions that will help you hook up your electronics to your Arduino.
+
+/snap/3Axis_SNAP
+
+this is the firmware that controls 3 stepper motors + limit switches on one Arduino.  this is for 2 arduino setups where one firmware controls the cartesian bot and the other controls the extruder(s)
+
+/snap/Extruder_SNAP
+
+this is the firmware that controls a Thermoplastic Extruder.  this is the corresponding firmware for a 2 arduino setup.
+
+/testers
+
+this folder contains generic testing firmware that allows you to test a whole bunch of different things with your setup.  i found this to be very helpful when assembling the electronics and various parts of the system, or to debug things when the *_SNAP firmwares are not working properly.
+
+these are all standalone firmware.  you simply upload them to the arduino, and watch the output on the serial monitor screen.
+
+pay attention to the pin assignments at the top of the files.  most of the 3Axis ones have the same pin assignments as the 3Axis_SNAP
+
+/testers/3Axis_DDA_Tester
+
+this tester will move your cartesian bot in DDA mode from point to point randomly.  its useful for testing your machine and to see it work.  very fun.
+
+/testers/3Axis_HomeReset_Tester
+
+this tester will test the home/reset functionality of your machine.  dont upload it unless you have opto endstops installed and working properly!!!
+
+/testers/3Axis_Sensor_Tester
+
+this tester will test the opto endstops of your cartesian bot.  this is handy for testing the sensors before you need to use them, such as when running the home/reset tester.
+
+/testers/3Axis_Tester
+
+this tester will simply run the cartesian bot from point to point in seek mode (each axis runs as fast as possible)  it simply tests that your stepper motors are working and that they can move your bot around.
+
+/testers/RPM_Tester
+
+this tester will test the various speeds of your stepper motors.  it will run each motor for 5 seconds at each RPM.  it starts at 1 RPM and goes all the way up to 500 RPM.  chances are that your stepper motors will not be able to do much above 250 RPM.  YMMV.

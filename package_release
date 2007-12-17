@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #init up
-VERSION=${2:-`date +%Y-%m-%d`}
+VERSION=${1:-`date +%Y-%m-%d`}
 TO_DIR="reprap-arduino-firmware-$VERSION"
 
 #directory structure
@@ -19,6 +19,9 @@ svn export 3Axis_Sensor_Tester "$TO_DIR/testers/3Axis_Sensor_Tester"
 svn export 3Axis_Tester "$TO_DIR/testers/3Axis_Tester"
 svn export RPM_Tester "$TO_DIR/testers/RPM_Tester"
 svn export ../library "$TO_DIR/library"
+
+cp README "$TO_DIR/"
+cp LICENSE "$TO_DIR/"
 
 #create our archive
 echo "Archiving..."
