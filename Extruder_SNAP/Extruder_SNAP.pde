@@ -14,6 +14,7 @@
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 2
 #define HOST_ADDRESS 0
+
 //
 // Extrude commands
 //

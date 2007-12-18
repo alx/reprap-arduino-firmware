@@ -12,13 +12,10 @@
 #include <LinearAxis.h>
 #include <CartesianBot.h>
 
-//the version of our software
-#define VERSION_MAJOR 0
-#define VERSION_MINOR 2
+//the addresses of our emulated axes.
 #define X_ADDRESS 2
 #define Y_ADDRESS 3
 #define Z_ADDRESS 4
-#define HOST_ADDRESS 0
 
 /********************************
  * digital i/o pin assignment
