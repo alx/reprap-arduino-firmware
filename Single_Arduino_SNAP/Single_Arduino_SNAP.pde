@@ -12,33 +12,27 @@
 ****************************************************************************************/
 
 //cartesian bot pins
-#define X_STEP_PIN 
-#define X_DIR_PIN 
-#define X_MIN_PIN 
-#define X_MAX_PIN 
-#define X_ENABLE_PIN 
-#define Y_STEP_PIN 
-#define Y_DIR_PIN 
-#define Y_MIN_PIN 
-#define Y_MAX_PIN 
-#define Y_ENABLE_PIN 
-#define Z_STEP_PIN 
-#define Z_DIR_PIN 
-#define Z_MIN_PIN 
-#define Z_MAX_PIN 
-#define Z_ENABLE_PIN
+#define X_STEP_PIN 2
+#define X_DIR_PIN 3
+#define X_MIN_PIN 4
+#define X_MAX_PIN 5
+#define X_ENABLE_PIN 14
+#define Y_STEP_PIN 6
+#define Y_DIR_PIN 7
+#define Y_MIN_PIN 8
+#define Y_MAX_PIN 9
+#define Y_ENABLE_PIN 15
+#define Z_STEP_PIN 10
+#define Z_DIR_PIN 11
+#define Z_MIN_PIN 12
+#define Z_MAX_PIN 13
+#define Z_ENABLE_PIN 16
 
 //extruder pins
-#define EXTRUDER_MOTOR_SPEED_PIN  
-#define EXTRUDER_MOTOR_DIR_PIN    
-#define EXTRUDER_HEATER_PIN       
-#define EXTRUDER_THERMISTOR_PIN 0
-
-//the addresses of our emulated axes.
-#define X_ADDRESS 2
-#define Y_ADDRESS 3
-#define Z_ADDRESS 4
-#define EXTRUDER_ADDRESS 8
+#define EXTRUDER_MOTOR_SPEED_PIN  3
+#define EXTRUDER_MOTOR_DIR_PIN    4
+#define EXTRUDER_HEATER_PIN       5
+#define EXTRUDER_THERMISTOR_PIN   0
 
 // how many steps do our motors have?
 #define X_MOTOR_STEPS 400
@@ -51,8 +45,22 @@
 #include <RepStepper.h>
 #include <LinearAxis.h>
 #include <CartesianBot.h>
+#include <ThermoplastExtruder.h>
 #include <CartesianBot_SNAP_v1.h>
 #include <ThermoplastExtruder_SNAP_v2.h>
+
+ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_THERMISTOR_PIN);
+
+CartesianBot bot = CartesianBot(
+	'x', X_MOTOR_STEPS, X_DIR_PIN, X_STEP_PIN, X_MIN_PIN, X_MAX_PIN, X_ENABLE_PIN,
+	'y', Y_MOTOR_STEPS, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN, Y_ENABLE_PIN,
+	'z', Z_MOTOR_STEPS, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN, Z_ENABLE_PIN
+);
+
+SIGNAL(SIG_OUTPUT_COMPARE1A)
+{
+	handleInterrupt();
+}
 
 void setup()
 {
@@ -67,7 +75,7 @@ void loop()
 {	
 	//get our state status / manage our status.
 	bot.readState();
-	extruder.manageState();
+	extruder.manageTemperature();
 
 	//process our commands
 	snap.receivePacket();
