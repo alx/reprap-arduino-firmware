@@ -45,9 +45,9 @@
 //our cartesian bot object
 
 CartesianBot bot(
-                 'x', X_MOTOR_STEPS, X_DIR_PIN, X_STEP_PIN, X_MIN_PIN, X_MAX_PIN,
-                 'y', Y_MOTOR_STEPS, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN,
-                 'z', Z_MOTOR_STEPS, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN
+                 'x', X_MOTOR_STEPS, X_DIR_PIN, X_STEP_PIN, X_MIN_PIN, X_MAX_PIN, X_ENABLE_PIN,
+                 'y', Y_MOTOR_STEPS, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN, Y_ENABLE_PIN,
+                 'z', Z_MOTOR_STEPS, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN, Z_ENABLE_PIN
                  );
 Point p;
 
@@ -136,7 +136,7 @@ void setup()
 
 	//debug info.
 	Serial.print("RPM: ");
-	Serial.println(bot.x.stepper.getRPM());
+	Serial.println((int)bot.x.stepper.getRPM());
 	Serial.print("Speed: ");
 	Serial.println(bot.x.stepper.getSpeed());
 	
