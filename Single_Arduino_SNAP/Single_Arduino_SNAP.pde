@@ -15,23 +15,24 @@
 #define X_STEP_PIN 2
 #define X_DIR_PIN 3
 #define X_MIN_PIN 4
-#define X_MAX_PIN 5
-#define X_ENABLE_PIN 14
-#define Y_STEP_PIN 6
+#define X_MAX_PIN 9
+#define X_ENABLE_PIN 15
+#define Y_STEP_PIN 10
 #define Y_DIR_PIN 7
 #define Y_MIN_PIN 8
-#define Y_MAX_PIN 9
+#define Y_MAX_PIN 13
 #define Y_ENABLE_PIN 15
-#define Z_STEP_PIN 10
-#define Z_DIR_PIN 11
-#define Z_MIN_PIN 12
-#define Z_MAX_PIN 13
-#define Z_ENABLE_PIN 16
+#define Z_STEP_PIN 19
+#define Z_DIR_PIN 18
+#define Z_MIN_PIN 17
+#define Z_MAX_PIN 16
+#define Z_ENABLE_PIN 15
 
 //extruder pins
-#define EXTRUDER_MOTOR_SPEED_PIN  3
-#define EXTRUDER_MOTOR_DIR_PIN    4
-#define EXTRUDER_HEATER_PIN       5
+#define EXTRUDER_MOTOR_SPEED_PIN  11
+#define EXTRUDER_MOTOR_DIR_PIN    12
+#define EXTRUDER_HEATER_PIN       6
+#define EXTRUDER_FAN_PIN          5
 #define EXTRUDER_THERMISTOR_PIN   0
 
 // how many steps do our motors have?

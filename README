@@ -20,6 +20,11 @@ this is the firmware that controls 3 stepper motors + limit switches on one Ardu
 
 this is the firmware that controls a Thermoplastic Extruder.  this is the corresponding firmware for a 2 arduino setup.
 
+/snap/Single_Arduino_SNAP
+
+this is the firmware that controls both the Cartesian Bot (3 steppers + limit switches) as well as a Thermoplastic Extruder.  This is the firmware you use for a single Arduino setup.  its pretty much maxed out.
+
+
 /testers
 
 this folder contains generic testing firmware that allows you to test a whole bunch of different things with your setup.  i found this to be very helpful when assembling the electronics and various parts of the system, or to debug things when the *_SNAP firmwares are not working properly.
