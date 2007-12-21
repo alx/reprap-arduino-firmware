@@ -1,11 +1,11 @@
 /*
-  3Axis_SNAP.pde - RepRap cartesian firmware for Arduino
+  3Axis_RPM_Tester.pde - RepRap cartesian bot speed tester.
 
   History:
-  * Created initial version (0.1) by Zach Smith.
-  * Rewrite (0.2) by Marius Kintel <kintel@sim.no> and Philipp Tiefenbacher <wizards23@gmail.com>
+  * (0.1) Created initial version by Zach Smith <hoeken@rrrf.org>.
 
-  */
+*/
+
 #include <SNAP.h>
 #include <LimitSwitch.h>
 #include <RepStepper.h>

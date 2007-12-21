@@ -1,11 +1,11 @@
-  /*
+/*
   3Axis_SNAP.pde - RepRap cartesian firmware for Arduino
 
   History:
-  * Created initial version (0.1) by Zach Smith.
-  * Rewrite (0.2) by Marius Kintel <kintel@sim.no> and Philipp Tiefenbacher <wizards23@gmail.com>
-  * Updated and tested (0.3) to work with current RepRap host software by Zach Smith <hoeken@rrrf.org>
-  */
+  * (0.1) Created initial version by Zach Smith <hoeken@rrrf.org>.
+  * (0.2) Rewrite by Marius Kintel <kintel@sim.no> and Philipp Tiefenbacher <wizards23@gmail.com>
+  * (0.3) Updated and tested to work with current RepRap host software by Zach Smith <hoeken@rrrf.org>
+*/
 
 /********************************
  * digital i/o pin assignment

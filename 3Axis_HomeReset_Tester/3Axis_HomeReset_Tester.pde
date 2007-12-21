@@ -1,11 +1,10 @@
 /*
-  3Axis_SNAP.pde - RepRap cartesian firmware for Arduino
+  3Axis_HomeReset_Tester.pde - RepRap cartesian bot home/reset tester.
 
   History:
   * Created initial version (0.1) by Zach Smith.
-  * Rewrite (0.2) by Marius Kintel <kintel@sim.no> and Philipp Tiefenbacher <wizards23@gmail.com>
 
-  */
+*/
 #include <SNAP.h>
 #include <LimitSwitch.h>
 #include <RepStepper.h>

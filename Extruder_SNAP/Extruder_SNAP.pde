@@ -4,7 +4,8 @@
   Main firmware for the extruder (heater, motor and temp. sensor)
 
   History:
-  * Created intial version (0.1) by Philipp Tiefenbacher and Marius Kintel
+  * (0.1) Created intial version by Philipp Tiefenbacher and Marius Kintel
+  * (0.2) Updated code to properly work with the RepRap host software.
 
 */
 
