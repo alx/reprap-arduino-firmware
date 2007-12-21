@@ -45,10 +45,10 @@ this tester will test the home/reset functionality of your machine.  dont upload
 
 this tester will test the opto endstops of your cartesian bot.  this is handy for testing the sensors before you need to use them, such as when running the home/reset tester.
 
-/testers/3Axis_Tester
+/testers/3Axis_Seek_Tester
 
 this tester will simply run the cartesian bot from point to point in seek mode (each axis runs as fast as possible)  it simply tests that your stepper motors are working and that they can move your bot around.
 
-/testers/RPM_Tester
+/testers/3Axis_Speed_Tester
 
 this tester will test the various speeds of your stepper motors.  it will run each motor for 5 seconds at each RPM.  it starts at 1 RPM and goes all the way up to 500 RPM.  chances are that your stepper motors will not be able to do much above 250 RPM.  YMMV.
