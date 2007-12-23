@@ -42,15 +42,14 @@
 
 //our library includes.
 #include <SNAP.h>
-#include <LimitSwitch.h>
 #include <RepStepper.h>
 #include <LinearAxis.h>
 #include <CartesianBot.h>
 #include <ThermoplastExtruder.h>
 #include <CartesianBot_SNAP_v1.h>
-#include <ThermoplastExtruder_SNAP_v2.h>
+#include <ThermoplastExtruder_SNAP_v1.h>
 
-ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_THERMISTOR_PIN);
+ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_FAN_PIN, EXTRUDER_THERMISTOR_PIN);
 
 CartesianBot bot = CartesianBot(
 	'x', X_MOTOR_STEPS, X_DIR_PIN, X_STEP_PIN, X_MIN_PIN, X_MAX_PIN, X_ENABLE_PIN,
@@ -69,7 +68,7 @@ void setup()
 	
 	//run any setup code we need.
 	setup_cartesian_bot_snap_v1();
-	setup_extruder_snap_v2();
+	setup_extruder_snap_v1();
 }
 
 void loop()
@@ -87,7 +86,7 @@ void loop()
 	
 		//route the command to the proper object.
 		if (dest == EXTRUDER_ADDRESS)
-			process_thermoplast_extruder_snap_commands_v2();
+			process_thermoplast_extruder_snap_commands_v1();
 		else
 			process_cartesian_bot_snap_commands_v1();
 	}
