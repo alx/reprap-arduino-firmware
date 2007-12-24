@@ -1,12 +1,13 @@
 /*
-  3Axis_HomeReset_Tester.pde - RepRap cartesian bot home/reset tester.
+	3Axis_HomeReset_Tester.pde - RepRap cartesian bot home/reset tester.
 
-  History:
-  * Created initial version (0.1) by Zach Smith.
-
+	History:
+	* (0.1) Created initial version by Zach Smith.
+	* (0.2) Updated to work with new optimizations by Zach Smith.
+	
+	License: GPL v2.0
 */
-#include <SNAP.h>
-#include <LimitSwitch.h>
+
 #include <RepStepper.h>
 #include <LinearAxis.h>
 #include <CartesianBot.h>

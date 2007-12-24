@@ -1,13 +1,13 @@
 /*
-  3Axis_RPM_Tester.pde - RepRap cartesian bot speed tester.
+	3Axis_RPM_Tester.pde - RepRap cartesian bot speed tester.
 
-  History:
-  * (0.1) Created initial version by Zach Smith <hoeken@rrrf.org>.
+	History:
+	* (0.1) Created initial version by Zach Smith <hoeken@rrrf.org>.
+	* (0.2) Updated to work with recent optimizations by Zach Smith.
 
+	License: GPL v2.0
 */
 
-#include <SNAP.h>
-#include <LimitSwitch.h>
 #include <RepStepper.h>
 #include <LinearAxis.h>
 #include <CartesianBot.h>

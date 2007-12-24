@@ -1,10 +1,13 @@
 /*
-  3Axis_SNAP.pde - RepRap cartesian firmware for Arduino
+	3Axis_SNAP.pde - RepRap cartesian firmware for Arduino
 
-  History:
-  * (0.1) Created initial version by Zach Smith <hoeken@rrrf.org>.
-  * (0.2) Rewrite by Marius Kintel <kintel@sim.no> and Philipp Tiefenbacher <wizards23@gmail.com>
-  * (0.3) Updated and tested to work with current RepRap host software by Zach Smith <hoeken@rrrf.org>
+	History:
+	* (0.1) Created initial version by Zach Smith <hoeken@rrrf.org>.
+	* (0.2) Rewrite by Marius Kintel <kintel@sim.no> and Philipp Tiefenbacher <wizards23@gmail.com>
+	* (0.3) Updated and tested to work with current RepRap host software by Zach Smith <hoeken@rrrf.org>
+	* (0.4) Updated to work the recent optimizations, ie. removal of LimitSwitch by Zach Smith.
+	
+	License: GPL v2.0
 */
 
 /********************************
@@ -42,7 +45,6 @@ CartesianBot bot = CartesianBot(
 );
 
 #include <SNAP.h>
-#include <LimitSwitch.h>
 #include <RepStepper.h>
 #include <LinearAxis.h>
 #include <CartesianBot.h>

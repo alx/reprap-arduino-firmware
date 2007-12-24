@@ -1,12 +1,13 @@
 /*
-  3Axis_Seek_Tester.pde - RepRap cartesian bot seek tester.
+	3Axis_Seek_Tester.pde - RepRap cartesian bot seek tester.
 
-  History:
-  * (0.1) Created initial version by Zach Smith.
+	History:
+	* (0.1) Created initial version by Zach Smith.
+	* (0.2) Updated to work with new optimizations.
+	
+	License: GPL v2.0
 */
 
-#include <SNAP.h>
-#include <LimitSwitch.h>
 #include <RepStepper.h>
 #include <LinearAxis.h>
 #include <CartesianBot.h>
