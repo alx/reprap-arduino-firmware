@@ -28,24 +28,15 @@ void setup()
 	Serial.begin(19200);
 
 	setup_extruder_snap_v1();
-
-        for (byte i=0; i<255; i++)
-        {
-          Serial.print("pic temp: ");
-          Serial.print(i, DEC);
-          Serial.print(" is celsius: ");
-          Serial.println(calculateTemperatureForPicTemp(i), DEC);
-        }
-
-        for (byte i=0; i<255; i++)
-        {
-          Serial.print("celsius: ");
-          Serial.print(i, DEC);
-          Serial.print(" is pic temp: ");
-          Serial.println(calculatePicTempForCelsius(i), DEC);
-        }
 }
 
 void loop()
 {
+	//manage our temperature
+	extruder.manageTemperature();
+
+	//process our commands
+	snap.receivePacket();
+	if (snap.packetReady())
+		process_thermoplast_extruder_snap_commands_v1();
 }
