@@ -48,7 +48,7 @@ CartesianBot bot = CartesianBot(
 #include <RepStepper.h>
 #include <LinearAxis.h>
 #include <CartesianBot.h>
-#include <CartesianBot_SNAP_v1.h>
+#include <CartesianBot_SNAP_v0.h>
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)
 {
@@ -60,7 +60,7 @@ void setup()
 	Serial.begin(19200);
 	
 	//run any setup code we need.
-	setup_cartesian_bot_snap_v1();
+	setup_cartesian_bot_snap_v0();
 }
 
 void loop()
@@ -71,5 +71,5 @@ void loop()
 	//process our commands
 	snap.receivePacket();
 	if (snap.packetReady())
-		process_cartesian_bot_snap_commands_v1();
+		process_cartesian_bot_snap_commands_v0();
 }

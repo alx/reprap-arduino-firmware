@@ -13,7 +13,7 @@
 
 #include <ThermoplastExtruder.h>
 #include <SNAP.h>
-#include <ThermoplastExtruder_SNAP_v1.h>
+#include <ThermoplastExtruder_SNAP_v0.h>
 
 #define EXTRUDER_MOTOR_SPEED_PIN  3
 #define EXTRUDER_MOTOR_DIR_PIN    4
@@ -27,7 +27,7 @@ void setup()
 {
 	Serial.begin(19200);
 
-	setup_extruder_snap_v1();
+	setup_extruder_snap_v0();
 }
 
 void loop()
@@ -38,5 +38,5 @@ void loop()
 	//process our commands
 	snap.receivePacket();
 	if (snap.packetReady())
-		process_thermoplast_extruder_snap_commands_v1();
+		process_thermoplast_extruder_snap_commands_v0();
 }

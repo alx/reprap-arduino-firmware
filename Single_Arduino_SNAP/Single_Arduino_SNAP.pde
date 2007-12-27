@@ -49,8 +49,8 @@
 #include <LinearAxis.h>
 #include <CartesianBot.h>
 #include <ThermoplastExtruder.h>
-#include <CartesianBot_SNAP_v1.h>
-#include <ThermoplastExtruder_SNAP_v1.h>
+#include <CartesianBot_SNAP_v0.h>
+#include <ThermoplastExtruder_SNAP_v0.h>
 
 ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_FAN_PIN, EXTRUDER_THERMISTOR_PIN);
 
@@ -70,8 +70,8 @@ void setup()
 	Serial.begin(19200);
 	
 	//run any setup code we need.
-	setup_cartesian_bot_snap_v1();
-	setup_extruder_snap_v1();
+	setup_cartesian_bot_snap_v0();
+	setup_extruder_snap_v0();
 }
 
 void loop()
@@ -89,8 +89,8 @@ void loop()
 	
 		//route the command to the proper object.
 		if (dest == EXTRUDER_ADDRESS)
-			process_thermoplast_extruder_snap_commands_v1();
+			process_thermoplast_extruder_snap_commands_v0();
 		else
-			process_cartesian_bot_snap_commands_v1();
+			process_cartesian_bot_snap_commands_v0();
 	}
 }
