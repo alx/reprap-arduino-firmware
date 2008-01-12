@@ -23,6 +23,8 @@
 
 ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_COOLER_PIN, EXTRUDER_THERMISTOR_PIN);
 
+#include <SoftwareSerial.h>
+
 void setup()
 {
 	Serial.begin(19200);
