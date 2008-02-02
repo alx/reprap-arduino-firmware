@@ -67,8 +67,6 @@ SIGNAL(SIG_OUTPUT_COMPARE1A)
 
 void setup()
 {
-	Serial.begin(19200);
-	
 	//run any setup code we need.
 	setup_cartesian_bot_snap_v1();
 	setup_extruder_snap_v1();
@@ -93,4 +91,19 @@ void loop()
 		else
 			process_cartesian_bot_snap_commands_v1();
 	}
+}
+
+// this function will return the number of bytes currently free in RAM
+// written by David A. Mellis
+// based on code by Rob Faludi http://www.faludi.com
+int availableMemory() {
+  int size = 1024;
+  byte *buf;
+
+  while ((buf = (byte *) malloc(--size)) == NULL)
+    ;
+
+  free(buf);
+
+  return size;
 }

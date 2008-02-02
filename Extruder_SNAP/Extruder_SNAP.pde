@@ -1,4 +1,4 @@
-/*
+ /*
 	Extruder_SNAP.pde - RepRap Thermoplastic Extruder firmware for Arduino
 
 	Main firmware for the extruder (heater, motor and temp. sensor)
@@ -26,7 +26,7 @@ ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, E
 #include <SoftwareSerial.h>
 
 void setup()
-{
+{      
 	Serial.begin(19200);
 
 	setup_extruder_snap_v1();
