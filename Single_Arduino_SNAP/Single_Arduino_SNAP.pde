@@ -60,13 +60,10 @@ CartesianBot bot = CartesianBot(
 	'z', Z_MOTOR_STEPS, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN, Z_ENABLE_PIN
 );
 
-SIGNAL(SIG_OUTPUT_COMPARE1A)
-{
-	handleInterrupt();
-}
-
 void setup()
 {
+	snap.begin(19200);
+	
 	//run any setup code we need.
 	setup_cartesian_bot_snap_v1();
 	setup_extruder_snap_v1();
@@ -79,7 +76,6 @@ void loop()
 	extruder.manageTemperature();
 
 	//process our commands
-	snap.receivePacket();
 	if (snap.packetReady())
 	{
 		//who is it for?
@@ -93,17 +89,3 @@ void loop()
 	}
 }
 
-// this function will return the number of bytes currently free in RAM
-// written by David A. Mellis
-// based on code by Rob Faludi http://www.faludi.com
-int availableMemory() {
-  int size = 1024;
-  byte *buf;
-
-  while ((buf = (byte *) malloc(--size)) == NULL)
-    ;
-
-  free(buf);
-
-  return size;
-}
