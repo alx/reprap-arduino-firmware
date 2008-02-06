@@ -73,12 +73,13 @@ void loop()
 {	
 	//get our state status / manage our status.
 	bot.readState();
+	cartesian_bot_snap_v1_loop();
 	extruder.manageTemperature();
 
 	//process our commands
 	if (snap.packetReady())
 	{
-		//who is it for?
+  		//who is it for?
 		byte dest = snap.getDestination();
 	
 		//route the command to the proper object.
