@@ -44,6 +44,7 @@
 #define Z_MOTOR_STEPS 400
 
 //our library includes.
+#include <HardwareSerial.h>
 #include <SNAP.h>
 #include <RepStepper.h>
 #include <LinearAxis.h>
@@ -84,7 +85,8 @@ void loop()
 	
 		//route the command to the proper object.
 		if (dest == EXTRUDER_ADDRESS)
-			process_thermoplast_extruder_snap_commands_v1();
+			true;
+//			process_thermoplast_extruder_snap_commands_v1();
 		else
 			process_cartesian_bot_snap_commands_v1();
 	}
