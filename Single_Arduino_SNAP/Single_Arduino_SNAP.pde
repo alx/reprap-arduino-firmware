@@ -85,10 +85,11 @@ void loop()
 	
 		//route the command to the proper object.
 		if (dest == EXTRUDER_ADDRESS)
-			true;
-//			process_thermoplast_extruder_snap_commands_v1();
+			process_thermoplast_extruder_snap_commands_v1();
 		else
 			process_cartesian_bot_snap_commands_v1();
 	}
+	else
+		snap.receivePacket();
 }
 
