@@ -87,7 +87,7 @@ void setup()
 	Serial.print("RPM: ");
 	Serial.println((int)bot.x.stepper.getRPM());
 	Serial.print("Speed: ");
-	Serial.println(bot.x.stepper.getSpeed());
+	Serial.println((int)bot.x.stepper.getSpeed());
 
 	p.x = max;
 	p.y = max;
@@ -145,24 +145,24 @@ void loop()
 		
 		//diagnostic data stuff.
 		Serial.print("Seeking to ");
-		Serial.print(bot.x.getTarget());
+		Serial.print((int)bot.x.target);
 		Serial.print(", ");
-		Serial.print(bot.y.getTarget());
+		Serial.print((int)bot.y.target);
 		Serial.print(", ");
-		Serial.print(bot.z.getTarget());
+		Serial.print((int)bot.z.target);
 		Serial.print(" at clock ");
 		Serial.println((int)OCR1A);
 
 		//dda diagnostics
 		Serial.println("DDA info");
 		Serial.print("Deltas: ");
-		Serial.print(bot.x.delta);
+		Serial.print((int)bot.x.getDelta());
 		Serial.print(", ");
-		Serial.print(bot.y.delta);
+		Serial.print((int)bot.y.getDelta());
 		Serial.print(", ");
-		Serial.println(bot.z.delta);
+		Serial.println((int)bot.z.getDelta());
 		Serial.print("Max Delta: ");
-		Serial.println(bot.max_delta);
+		Serial.println((int)bot.max_delta);
 
 		bot.enableTimerInterrupt();
 	}
