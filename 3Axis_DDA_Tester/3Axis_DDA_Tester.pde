@@ -15,21 +15,29 @@
 /********************************
  * digital i/o pin assignment
  ********************************/
+//cartesian bot pins
 #define X_STEP_PIN 2
 #define X_DIR_PIN 3
 #define X_MIN_PIN 4
-#define X_MAX_PIN 5
-#define X_ENABLE_PIN 14
-#define Y_STEP_PIN 6
+#define X_MAX_PIN 9
+#define X_ENABLE_PIN 15
+#define Y_STEP_PIN 10
 #define Y_DIR_PIN 7
 #define Y_MIN_PIN 8
-#define Y_MAX_PIN 9
+#define Y_MAX_PIN 13
 #define Y_ENABLE_PIN 15
-#define Z_STEP_PIN 10
-#define Z_DIR_PIN 11
-#define Z_MIN_PIN 12
-#define Z_MAX_PIN 13
-#define Z_ENABLE_PIN 16
+#define Z_STEP_PIN 19
+#define Z_DIR_PIN 18
+#define Z_MIN_PIN 17
+#define Z_MAX_PIN 16
+#define Z_ENABLE_PIN 15
+
+//extruder pins
+#define EXTRUDER_MOTOR_SPEED_PIN  11
+#define EXTRUDER_MOTOR_DIR_PIN    12
+#define EXTRUDER_HEATER_PIN       6
+#define EXTRUDER_FAN_PIN          5
+#define EXTRUDER_THERMISTOR_PIN   0
 
 /********************************
  * how many steps do our motors have?
@@ -51,7 +59,8 @@ CartesianBot bot(
                  );
 Point p;
 
-int speed = 255;
+int speed = 60;
+int max = 2000;
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)
 {
@@ -80,19 +89,24 @@ void setup()
 	Serial.print("Speed: ");
 	Serial.println(bot.x.stepper.getSpeed());
 
-	p.x = 20000;
-	p.y = 20000;
+	p.x = max;
+	p.y = max;
 	p.z = 0;
 	bot.queuePoint(p);
 
 	p.x = 0;
-	p.y = 20000;
-	p.z = 20000;
+	p.y = max;
+        p.z = 0;
 	bot.queuePoint(p);
 	
-	p.x = 20000;
+	p.x = max;
 	p.y = 0;
-	p.z = 20000;
+	p.z = 0;
+	bot.queuePoint(p);
+
+	p.x = 0;
+	p.y = 0;
+	p.z = 0;
 	bot.queuePoint(p);
 }
 
@@ -101,10 +115,10 @@ void loop()
 	//load up teh queue
 	while (!bot.isQueueFull())
 	{
-		p.x = random(1000, 20000);
-		p.y = random(1000, 20000);
-		p.z = random(1000, 20000);
-        bot.queuePoint(p);
+		p.x = random(0, max);
+		p.y = random(0, max);
+		p.z = 0;
+                bot.queuePoint(p);
 	}
 
 	//get our state status.
@@ -114,7 +128,7 @@ void loop()
 	if (bot.atTarget())
 	{
 		//set our speed.
-		speed = random(200, 255);
+		speed = random(50, 60);
 		bot.x.stepper.setRPM(speed);
 		bot.setTimer(bot.x.stepper.getSpeed());
 

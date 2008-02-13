@@ -50,8 +50,8 @@
 #include <LinearAxis.h>
 #include <CartesianBot.h>
 #include <ThermoplastExtruder.h>
+//#include <ThermoplastExtruder_SNAP_v1.h>
 #include <CartesianBot_SNAP_v1.h>
-#include <ThermoplastExtruder_SNAP_v1.h>
 
 ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_FAN_PIN, EXTRUDER_THERMISTOR_PIN);
 
@@ -67,29 +67,53 @@ void setup()
 	
 	//run any setup code we need.
 	setup_cartesian_bot_snap_v1();
-	setup_extruder_snap_v1();
+	//setup_extruder_snap_v1();
+	
+	snap.debug();
+	Serial.println("DIED2");
 }
 
 void loop()
 {	
+	//snap.debug();
+	//Serial.println("L");
+	
 	//get our state status / manage our status.
 	bot.readState();
-	cartesian_bot_snap_v1_loop();
-	extruder.manageTemperature();
+//	snap.debug();
+//	Serial.println("R");
 
+	//do the loop commands.
+	cartesian_bot_snap_v1_loop();
+//	snap.debug();
+//	Serial.println("C");
+
+	//extruder.manageTemperature();
+	
 	//process our commands
 	if (snap.packetReady())
 	{
+//		snap.debug();
+//		Serial.println("PR");
+
   		//who is it for?
 		byte dest = snap.getDestination();
-	
+
 		//route the command to the proper object.
-		if (dest == EXTRUDER_ADDRESS)
-			process_thermoplast_extruder_snap_commands_v1();
-		else
+//		if (dest == EXTRUDER_ADDRESS)
+//			true;
+		//	process_thermoplast_extruder_snap_commands_v1();
+		//else 
+		if(dest == X_ADDRESS || dest == Y_ADDRESS || dest == Z_ADDRESS)
 			process_cartesian_bot_snap_commands_v1();
+
+//		snap.debug();
+//		Serial.println("PF");
 	}
 	else
 		snap.receivePacket();
+	
+//	snap.debug();
+//	Serial.println("F");
+//	delay(25);
 }
-
