@@ -50,7 +50,7 @@
 #include <LinearAxis.h>
 #include <CartesianBot.h>
 #include <ThermoplastExtruder.h>
-//#include <ThermoplastExtruder_SNAP_v1.h>
+#include <ThermoplastExtruder_SNAP_v1.h>
 #include <CartesianBot_SNAP_v1.h>
 
 ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_FAN_PIN, EXTRUDER_THERMISTOR_PIN);
@@ -70,7 +70,7 @@ void setup()
 	//setup_extruder_snap_v1();
 	
 	snap.debug();
-	Serial.println("DIED2");
+	Serial.println("BEGIN");
 }
 
 void loop()
@@ -100,15 +100,15 @@ void loop()
 		byte dest = snap.getDestination();
 
 		//route the command to the proper object.
-//		if (dest == EXTRUDER_ADDRESS)
-//			true;
-		//	process_thermoplast_extruder_snap_commands_v1();
-		//else 
-		if(dest == X_ADDRESS || dest == Y_ADDRESS || dest == Z_ADDRESS)
+		if (dest == EXTRUDER_ADDRESS)
+			process_thermoplast_extruder_snap_commands_v1();
+		else if(dest == X_ADDRESS || dest == Y_ADDRESS || dest == Z_ADDRESS)
 			process_cartesian_bot_snap_commands_v1();
 
 //		snap.debug();
 //		Serial.println("PF");
+		
+		snap.releaseLock();
 	}
 	else
 		snap.receivePacket();
