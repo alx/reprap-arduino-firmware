@@ -20,11 +20,8 @@ void loop()
 		}
 		word[serial_count] = ' '; //TODO: kinda hacky
 
-		Serial.print("Recieved: ");
-		Serial.println(word);
-
 		process_string(word, sizeof(word));
 
-		Serial.print("done");
+		Serial.println("done");
 	}
 }

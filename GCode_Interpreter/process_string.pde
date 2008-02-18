@@ -1,23 +1,25 @@
 //Read the string and execute instructions
 void process_string(char instruction[], int size)
 {
-	int distanceX = 0; //TODO: struct?
-	int distanceY = 0; 
-	int distanceZ = 0;
+	Point p;
+	p.x = 0;
+	p.y = 0;
+	p.z = 0;
 
-	static int currentX = 0;
-	static int currentY = 0;
-	static int currentZ = 0;
-
-	static int speed = 1650;           //default speed
-	static int units = StepsInInch;    //default to inches for units
+	//what is our speed?
+	int feedrate = 0;
+	
+	//which mode are we in?
 	static boolean abs_mode = false;   //0 = incremental; 1 = absolute
 
+	//a bit of debug info.
+	Serial.print("Got:");  
+	Serial.println(instruction);    
+
+	//what is your command?
 	char temp_word[2] = {instruction[1], instruction[2]};
 	int word = -1;
-
-	Serial.println("processing string...");  
-	Serial.println(instruction);    
+	
 	if (instruction[0] == 'G')
 		word = atoi(temp_word);
 
@@ -25,28 +27,54 @@ void process_string(char instruction[], int size)
 	{
 		//Rapid Positioning
 		case 00:
-			distanceX = (int)(search_string('X', instruction, size) * units);
-			distanceY = (int)(search_string('Y', instruction, size) * units);
-			distanceZ = (int)(search_string('Z', instruction, size) * units);
+			p.x = (int)(search_string('X', instruction, size) * x_units);
+			p.y = (int)(search_string('Y', instruction, size) * y_units);
+			p.z = (int)(search_string('Z', instruction, size) * z_units);
   
 			if(abs_mode)
-				moveXYZ(distanceX-currentX, distanceY-currentY, distanceZ-currentZ, MAX_SPEED);
+			{
+				x.setTarget(p.x);
+				y.setTarget(p.y);
+				z.setTarget(p.z);
+			}
 			else
-				moveXYZ(distanceX, distanceY, distanceZ, MAX_SPEED);
+			{
+				x.setTarget(x.current + p.x);
+				y.setTarget(y.current + p.y);
+				z.setTarget(z.current + p.z);
+			}
+
+			seekMove();
+
 		break;    
 
 		//Linear Interpolation
 		case 01:
-				distanceY = (int)(search_string('Y', instruction, size) * units);
-			distanceZ = (int)(search_string('Z', instruction, size) * units);
-			
-			if  (search_string('F', instruction, size))
-				speed = (int)(search_string('F', instruction, size));  //TODO: units of speed
 
-			if (abs_mode)
-				moveXYZ(distanceX-currentX,distanceY-currentY,distanceZ-currentZ,speed);     
+			p.x = (int)(search_string('X', instruction, size) * x_units);
+			p.y = (int)(search_string('Y', instruction, size) * y_units);
+			p.z = (int)(search_string('Z', instruction, size) * z_units);
+			
+			//TODO: units of speed
+			if (search_string('F', instruction, size))
+				feedrate = (int)(search_string('F', instruction, size));
+				
+			if(abs_mode)
+			{
+				x.setTarget(p.x);
+				y.setTarget(p.y);
+				z.setTarget(p.z);
+			}
 			else
-				moveXYZ(distanceX,distanceY,distanceZ,speed);
+			{
+				x.setTarget(x.current + p.x);
+				y.setTarget(y.current + p.y);
+				z.setTarget(z.current + p.z);
+			}
+
+
+			ddaMove();
+			
 		break;
 
 		//Dwell
@@ -56,12 +84,16 @@ void process_string(char instruction[], int size)
 
 		//Inches for Units
 		case 20:
-			units = StepsInInch; //inches
+			x_units = X_STEPS_PER_INCH;
+			y_units = Y_STEPS_PER_INCH;
+			z_units = Z_STEPS_PER_INCH;
 		break;
 
 		//mm for Units    
 		case 21:
-			units = StepsInMM; //mm
+			x_units = X_STEPS_PER_MM;
+			y_units = Y_STEPS_PER_MM;
+			z_units = Z_STEPS_PER_MM;
 		break;    
 
 		//Absolute Positioning
@@ -91,24 +123,21 @@ void process_string(char instruction[], int size)
 	}
   
 	instruction = NULL;
-	currentX = distanceX;
-	currentY = distanceY;
-	currentZ = distanceZ;  
 
 	if  ((word == 0) | (word == 1))
 	{
 		Serial.print("X distance: ");
-		Serial.println(distanceX); 
+		Serial.println(p.x); 
 		Serial.print("Y distance: ");
-		Serial.println(distanceY); 
+		Serial.println(p.y);     
 		Serial.print("Z distance: ");
-		Serial.println(distanceZ); 
-		Serial.print("X current : ");
-		Serial.println(currentX); 
-		Serial.print("Y current : ");
-		Serial.println(currentY);     
-		Serial.print("Z current : ");
-		Serial.println(currentZ); 
+		Serial.println(p.z);
+		Serial.print("X current: ");
+		Serial.println(x.current); 
+		Serial.print("Y current: ");
+		Serial.println(y.current);     
+		Serial.print("Z current: ");
+		Serial.println(z.current); 
 	}
 }
 

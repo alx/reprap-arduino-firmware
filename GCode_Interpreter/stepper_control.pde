@@ -3,52 +3,74 @@ void dwell(int time)
 	delay(time); 
 }
 
-void move(int steppin, int dirpin, int distance, int dir, int speed)
+void seekMove()
 {
-	digitalWrite(dirpin, dir);
-	delayMicroseconds(10);
-	for (int i=0; i<distance; i++)
+	int delay;
+	
+	if (z.delta != 0)
+		delay = z.stepper.getMicros();
+	else
+		delay = min(x.stepper.getMicros(), y.stepper.getMicros());
+
+	//do our seek!
+	do
 	{
-		digitalWrite(steppin, HIGH);
-		delayMicroseconds(10);
-		digitalWrite(steppin, LOW);
-		delayMicroseconds(speed);        
+		x.readState();
+		y.readState();
+		z.readState();
+
+		if (x.can_step)
+			x.doStep();
+		
+		if (y.can_step)
+			y.doStep();
+		
+		if (z.can_step)
+			z.doStep();
+			
+		delayMicroseconds(delay);
 	}
+	while (x.can_step || y.can_step || z.can_step);
+	
 }
 
-//TODO: look into interupts for moving multiple axis
-void moveXYZ(int distanceX, int distanceY, int distanceZ, int speed)
+void ddaMove()
 {
-	int dirX; int dirY; int dirZ;
+	int delay;
+	int max_delta = 0;
+	
+	if (z.delta != 0)
+		delay = z.stepper.getMicros();
+	else
+		delay = min(x.stepper.getMicros(), y.stepper.getMicros());
+	
+	//figure out our deltas
+	max_delta = max(x.delta, max_delta);
+	max_delta = max(y.delta, max_delta);
+	max_delta = max(z.delta, max_delta);
 
-	(distanceX < 0)?(dirX=0):(dirX=1);
-	(distanceY < 0)?(dirY=0):(dirY=1);
-	(distanceZ < 0)?(dirZ=0):(dirZ=1);  
-
-	distanceX = abs(distanceX);
-	distanceY = abs(distanceY);
-	distanceZ = abs(distanceZ);
-
-	int slopeX = distanceX;
-	int slopeY = distanceY;
-	int slopeZ = distanceZ;  //TODO: add z slope
-
-	for (int i = slopeX * slopeY; i > 1; i--)
+	//init stuff.
+	x.initDDA(max_delta);
+	y.initDDA(max_delta);
+	z.initDDA(max_delta);
+	
+	//do our DDA line!
+	do
 	{
-		if ((slopeX % i == 0) && (slopeY % i == 0))
-		{
-			slopeX /= i;
-			slopeY /= i;
-		}
+		x.readState();
+		y.readState();
+		z.readState();
+
+		if (x.can_step)
+			x.ddaStep(max_delta);
+		
+		if (y.can_step)
+			y.ddaStep(max_delta);
+		
+		if (z.can_step)
+			z.ddaStep(max_delta);
+			
+		delayMicroseconds(delay);
 	}
-
-	while (distanceX > 0 | distanceY > 0 | distanceZ > 0)
-	{
-		move(X_STEP_PIN, X_DIR_PIN, slopeX, dirX, speed);
-		move(Y_STEP_PIN, Y_DIR_PIN, slopeY, dirY, speed);
-		move(Z_STEP_PIN, Z_DIR_PIN, slopeZ, dirZ, speed);
-		distanceX -= slopeX;
-		distanceY -= slopeY;
-		distanceZ -= slopeZ;
-	} 
+	while (x.can_step || y.can_step || z.can_step);
 }
