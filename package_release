@@ -8,6 +8,7 @@ TO_DIR="reprap-arduino-firmware-$VERSION"
 echo "Making Files..."
 mkdir -p "$TO_DIR"
 mkdir -p "$TO_DIR/snap"
+mkdir -p "$TO_DIR/gcode"
 mkdir -p "$TO_DIR/testers"
 
 echo "Exporting files..."

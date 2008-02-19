@@ -2,9 +2,9 @@
 void process_string(char instruction[], int size)
 {
 	Point p;
-	p.x = 0;
-	p.y = 0;
-	p.z = 0;
+	p.x = 0.0;
+	p.y = 0.0;
+	p.z = 0.0;
 
 	//what is our speed?
 	int feedrate = 0;
@@ -14,8 +14,8 @@ void process_string(char instruction[], int size)
 	static boolean abs_mode = false;   //0 = incremental; 1 = absolute
 
 	//a bit of debug info.
-	Serial.print("Got:");  
-	Serial.println(instruction);    
+	//Serial.print("Got:");  
+	//Serial.println(instruction);    
 
 	//what is your command?
 	char temp_word[2] = {instruction[1], instruction[2]};
@@ -27,43 +27,25 @@ void process_string(char instruction[], int size)
 	switch (word)
 	{
 		//Rapid Positioning
-		case 0:
-			p.x = (int)(search_string('X', instruction, size) * x_units);
-			p.y = (int)(search_string('Y', instruction, size) * y_units);
-			p.z = (int)(search_string('Z', instruction, size) * z_units);
-  
-			if(abs_mode)
-			{
-				x.setTarget(p.x);
-				y.setTarget(p.y);
-				z.setTarget(p.z);
-			}
-			else
-			{
-				x.setTarget(x.current + p.x);
-				y.setTarget(y.current + p.y);
-				z.setTarget(z.current + p.z);
-			}
-
-			ddaMove();
-
-		break;    
-
 		//Linear Interpolation
+		//these are basically the same thing.
+		case 0:
 		case 1:
-
-			p.x = (int)(search_string('X', instruction, size) * x_units);
-			p.y = (int)(search_string('Y', instruction, size) * y_units);
-			p.z = (int)(search_string('Z', instruction, size) * z_units);
-			
+			p.x = (long)(search_string('X', instruction, size) * x_units);
+			p.y = (long)(search_string('Y', instruction, size) * y_units);
+			p.z = (long)(search_string('Z', instruction, size) * z_units);
+  
 			//TODO: units of speed
-			if (search_string('F', instruction, size))
-				feedrate = (int)(search_string('F', instruction, size));
-				
+			if (word == 1)
+			{
+				if (search_string('F', instruction, size))
+					feedrate = (int)(search_string('F', instruction, size));
+			}
+
 			if(abs_mode)
 			{
 				x.setTarget(p.x);
-				y.setTarget(p.y);
+				y.setTarget(p.y);	
 				z.setTarget(p.z);
 			}
 			else
@@ -73,25 +55,13 @@ void process_string(char instruction[], int size)
 				z.setTarget(z.current + p.z);
 			}
 
-
 			ddaMove();
-			
+
 		break;
 
 		//Dwell
 		case 4:
-			dwell(search_string('P', instruction, size));
-		break;
-		
-		//custom code for temperature control
-		case 6:
-			extruder.setTemperature((int)search_string('P', instruction, size));
-		break;
-		
-		//custom code for temperature reading
-		case 7:
-			Serial.print("Temp:");
-			Serial.println(extruder.getTemperature());
+			delay((int)search_string('P', instruction, size));
 		break;
 
 		//Inches for Units
@@ -119,13 +89,22 @@ void process_string(char instruction[], int size)
 		
 		//go home via an intermediate point.
 		case 30:
-			p.x = (int)(search_string('X', instruction, size) * x_units);
-			p.y = (int)(search_string('Y', instruction, size) * y_units);
-			p.z = (int)(search_string('Z', instruction, size) * z_units);
+			p.x = (long)(search_string('X', instruction, size) * x_units);
+			p.y = (long)(search_string('Y', instruction, size) * y_units);
+			p.z = (long)(search_string('Z', instruction, size) * z_units);
 
-			x.setTarget(p.x);
-			y.setTarget(p.y);
-			z.setTarget(p.z);
+			if(abs_mode)
+			{
+				x.setTarget(p.x);
+				y.setTarget(p.y);
+				z.setTarget(p.z);
+			}
+			else
+			{
+				x.setTarget(x.current + p.x);
+				y.setTarget(y.current + p.y);
+				z.setTarget(z.current + p.z);
+			}
 			
 			ddaMove();
 
@@ -134,11 +113,6 @@ void process_string(char instruction[], int size)
 			z.setTarget(0);
 			
 			ddaMove();
-		break;
-			
-		//spindle max speed.
-		case 50:
-			max_spindle_speed = (int)(search_string('S', instruction, size));
 		break;
 			
 		//Absolute Positioning
@@ -178,6 +152,11 @@ void process_string(char instruction[], int size)
 	m_code = search_string('M', instruction, size);
 	switch (m_code)
 	{
+		//TODO: this is a bug because search_string returns 0.  gotta fix that.
+		case 0:
+			true;
+		break;
+/*
 		case 0:
 			//todo: stop program
 		break;
@@ -189,38 +168,56 @@ void process_string(char instruction[], int size)
 		case 2:
 			//todo: program end
 		break;
-		
-		//turn spindle on, CW
-		case 3:
-		
-			//warmup
-			while (extruder.getTemperature() < extruder.target_celsius)
-				delayMicroseconds(5);
-		
-			extruder.setDirection(1);
-			extruder.setSpeed(max_spindle_speed);
-			Serial.println("extruder CW");
-		break;
-		
-		//turn spindle on, CCW
-		case 4:
-			extruder.setDirection(0);
-			extruder.setSpeed(max_spindle_speed);
-			Serial.println("extruder CCW");
-		break;
-		
-		//turn spindle off
-		case 5:
-			extruder.setSpeed(0);
-			Serial.println("extruder off");
-		break;
-		
+*/		
+		//turn fan on
 		case 7:
 			extruder.setCooler(255);
 		break;
 		
+		//turn fan off
 		case 9:
 			extruder.setCooler(0);
+		break;
+		
+		//set max extruder speed, 0-255 PWM
+		case 100:
+			extruder_speed = (int)(search_string('P', instruction, size));
+		break;
+		
+		//turn extruder on, forward
+		case 101:
+			//warmup 	
+			while (extruder.getTemperature() < extruder.target_celsius)
+			{
+				extruder.manageTemperature();
+				Serial.print("Temp:");
+				Serial.println(extruder.getTemperature());
+				delay(1000);	
+			}
+			extruder.setDirection(1);
+			extruder.setSpeed(extruder_speed);
+		break;
+
+		//turn extruder on, reverse
+		case 102:
+			extruder.setDirection(0);
+			extruder.setSpeed(extruder_speed);
+		break;
+
+		//turn extruder off
+		case 103:
+			extruder.setSpeed(0);
+		break;
+		
+		//custom code for temperature control
+		case 104:
+			extruder.setTemperature((int)search_string('P', instruction, size));
+		break;
+		
+		//custom code for temperature reading
+		case 105:
+			Serial.print("Temp:");
+			Serial.println(extruder.getTemperature());
 		break;
 		
 		default:

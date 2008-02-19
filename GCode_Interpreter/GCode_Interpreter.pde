@@ -35,12 +35,12 @@
 // define the parameters of our machine.
 float X_STEPS_PER_INCH  = 416.772354;
 float X_STEPS_PER_MM    = 16.4083604;
-int   X_MAX_SPEED       = 30;
+int   X_MAX_SPEED       = 20;
 int   X_MOTOR_STEPS     = 400;
 
 float Y_STEPS_PER_INCH  = 416.772354;
 float Y_STEPS_PER_MM    = 16.4083604;
-int   Y_MAX_SPEED       = 100;
+int   Y_MAX_SPEED       = 20;
 int   Y_MOTOR_STEPS     = 400;
 
 float Z_STEPS_PER_INCH  = 16256.0;
@@ -54,7 +54,7 @@ float y_units = Y_STEPS_PER_INCH;
 float z_units = Z_STEPS_PER_INCH;
 
 //these our the default values for the extruder.
-int max_spindle_speed = 128;
+int extruder_speed = 128;
 
 #include <HardwareSerial.h>
 #include <RepStepper.h>
@@ -71,7 +71,7 @@ void setup()
 {
 	//Do startup stuff here
 	Serial.begin(19200);
-	Serial.println("Startup");
+	Serial.println("start");
 	
 	x.stepper.setRPM(X_MAX_SPEED);
 	y.stepper.setRPM(Y_MAX_SPEED);
@@ -79,7 +79,7 @@ void setup()
 	
 	//default to room temp.
 	extruder.setTemperature(21);
-	extruder.heater_low = 32;
+	extruder.heater_low = 64;
 	extruder.heater_high = 255;
 }
 
