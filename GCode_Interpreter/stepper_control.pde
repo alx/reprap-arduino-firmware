@@ -3,37 +3,6 @@ void dwell(int time)
 	delay(time); 
 }
 
-void seekMove()
-{
-	int delay;
-	
-	if (z.delta != 0)
-		delay = z.stepper.getMicros();
-	else
-		delay = min(x.stepper.getMicros(), y.stepper.getMicros());
-
-	//do our seek!
-	do
-	{
-		x.readState();
-		y.readState();
-		z.readState();
-
-		if (x.can_step)
-			x.doStep();
-		
-		if (y.can_step)
-			y.doStep();
-		
-		if (z.can_step)
-			z.doStep();
-			
-		delayMicroseconds(delay);
-	}
-	while (x.can_step || y.can_step || z.can_step);
-	
-}
-
 void ddaMove()
 {
 	int delay;
@@ -57,6 +26,7 @@ void ddaMove()
 	//do our DDA line!
 	do
 	{
+		extruder.manageTemperature();
 		x.readState();
 		y.readState();
 		z.readState();
