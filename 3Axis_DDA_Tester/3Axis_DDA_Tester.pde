@@ -59,22 +59,20 @@ CartesianBot bot(
                  );
 Point p;
 
-int speed = 60;
-int max = 2000;
+int max_speed = 100;
+int max_x = 2500;
+int max_y = 2500;
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)
 {
-	if (bot.mode == MODE_DDA)
-	{
-		if (bot.x.can_step)
-			bot.x.ddaStep(bot.max_delta);
+	if (bot.x.can_step)
+		bot.x.ddaStep(bot.max_delta);
 
-		if (bot.y.can_step)
-			bot.y.ddaStep(bot.max_delta);
+	if (bot.y.can_step)
+		bot.y.ddaStep(bot.max_delta);
 
-		if (bot.z.can_step)
-			bot.z.ddaStep(bot.max_delta);
-	}
+	if (bot.z.can_step)
+		bot.z.ddaStep(bot.max_delta);
 }
 	
 void setup()
@@ -84,22 +82,25 @@ void setup()
 	Serial.begin(57600);
 	Serial.println("Starting 3 axis DDA exerciser.");
 
+	bot.x.stepper.setRPM(max_speed);
+	bot.setTimer(bot.x.stepper.step_delay);
+	
 	Serial.print("RPM: ");
 	Serial.println((int)bot.x.stepper.rpm);
 	Serial.print("Speed: ");
 	Serial.println((int)bot.x.stepper.step_delay);
 
-	p.x = max;
-	p.y = max;
+	p.x = max_x;
+	p.y = max_y;
 	p.z = 0;
 	bot.queuePoint(p);
 
 	p.x = 0;
-	p.y = max;
-        p.z = 0;
+	p.y = max_y;
+	p.z = 0;
 	bot.queuePoint(p);
 	
-	p.x = max;
+	p.x = max_x;
 	p.y = 0;
 	p.z = 0;
 	bot.queuePoint(p);
@@ -115,10 +116,10 @@ void loop()
 	//load up teh queue
 	while (!bot.isQueueFull())
 	{
-		p.x = random(0, max);
-		p.y = random(0, max);
+		p.x = random(0, max_x);
+		p.y = random(0, max_y);
 		p.z = 0;
-                bot.queuePoint(p);
+		bot.queuePoint(p);
 	}
 
 	//get our state status.
@@ -127,17 +128,6 @@ void loop()
 	//if we are at our target, stop us.
 	if (bot.atTarget())
 	{
-		//set our speed.
-		speed = random(50, 60);
-		bot.x.stepper.setRPM(speed);
-		bot.setTimer(bot.x.stepper.step_delay);
-
-		//diagnostics.
-		Serial.print("Setting RPM to ");
-		Serial.println(speed);
-		Serial.print("Speed is now: ");
-		Serial.println(bot.x.stepper.step_delay);
-		
 		//get our next point.
 		bot.getNextPoint();
 		bot.calculateDDA();
@@ -156,11 +146,11 @@ void loop()
 		//dda diagnostics
 		Serial.println("DDA info");
 		Serial.print("Deltas: ");
-		Serial.print((int)bot.x.getDelta());
+		Serial.print((int)bot.x.delta);
 		Serial.print(", ");
-		Serial.print((int)bot.y.getDelta());
+		Serial.print((int)bot.y.delta);
 		Serial.print(", ");
-		Serial.println((int)bot.z.getDelta());
+		Serial.println((int)bot.z.delta);
 		Serial.print("Max Delta: ");
 		Serial.println((int)bot.max_delta);
 

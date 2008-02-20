@@ -50,17 +50,12 @@ CartesianBot bot = CartesianBot(
 #include <CartesianBot.h>
 #include <CartesianBot_SNAP_v1.h>
 
-SIGNAL(SIG_OUTPUT_COMPARE1A)
-{
-	handleInterrupt();
-}
-	
 void setup()
 {
 	Serial.begin(19200);
 	
 	//run any setup code we need.
-	setup_cartesian_bot_snap_v0();
+	setup_cartesian_bot_snap_v1();
 }
 
 void loop()

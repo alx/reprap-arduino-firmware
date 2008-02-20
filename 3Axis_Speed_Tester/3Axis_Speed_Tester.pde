@@ -73,14 +73,14 @@ void setup()
     {
 	    bot.enableTimerInterrupt();
 		bot.x.stepper.setRPM(i);
-		bot.setTimer(bot.x.stepper.getSpeed());
+		bot.setTimer(bot.x.stepper.step_delay);
 
 		Serial.print("RPM: ");
-		Serial.println(bot.x.stepper.getRPM(), DEC);
+		Serial.println(bot.x.stepper.rpm, DEC);
 		Serial.print("Speed: ");
-		Serial.println(bot.x.stepper.getSpeed(), DEC);
+		Serial.println(bot.x.stepper.step_delay, DEC);
 		Serial.print("Resolution: ");
-		Serial.println(bot.getTimerResolution(bot.x.stepper.getSpeed()), DEC);
+		Serial.println(bot.getTimerResolution(bot.x.stepper.step_delay), DEC);
 		Serial.print("OCR1A: ");
 		Serial.println(OCR1A, DEC);
 		Serial.println(" ");

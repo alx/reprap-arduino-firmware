@@ -69,56 +69,57 @@ byte x_notify = 0;
 byte y_notify = 0;
 byte z_notify = 0;
 
+byte x_function;
+byte y_function;
+byte z_function;
+
 #define X_ADDRESS 2
 #define Y_ADDRESS 3
 #define Z_ADDRESS 4
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)
 {
-	if (bot.mode == MODE_HOMERESET)
+	bot.readState();
+
+	if (x_function == func_homereset)
 	{
-		bot.readState();
-
-		if (bot.x.function == func_homereset)
+		if (!bot.x.atMin())
+			bot.x.stepper.pulse();
+		else
 		{
-			if (!bot.x.atMin())
-				bot.x.stepper.pulse();
-			else
-			{
-				bot.x.setPosition(0);
-				bot.x.function = func_idle;
-				
-				if (x_notify != 255)
-					notifyTargetReached(x_notify, X_ADDRESS);
-			}
+			bot.x.setPosition(0);
+			x_function = func_idle;
+			
+			if (x_notify != 255)
+				notifyTargetReached(x_notify, X_ADDRESS);
 		}
+	}
 
-		if (bot.y.function == func_homereset)
+	if (y_function == func_homereset)
+	{
+		if (!bot.y.atMin())
+			bot.y.stepper.pulse();
+		else
 		{
-			if (!bot.y.atMin())
-				bot.y.stepper.pulse();
-			else
-			{
-				bot.y.setPosition(0);
-				bot.y.function = func_idle;
-				
-				if (y_notify != 255)
-					notifyTargetReached(y_notify, Y_ADDRESS);	
-			}
+			bot.y.setPosition(0);
+			y_function = func_idle;
+			
+			if (y_notify != 255)
+				notifyTargetReached(y_notify, Y_ADDRESS);	
 		}
+	}
 
-		if (bot.z.function == func_homereset)
+	if (z_function == func_homereset)
+	{
+		if (!bot.z.atMin())
+			bot.z.stepper.pulse();
+		else
 		{
-			if (!bot.z.atMin())
-				bot.z.stepper.pulse();
-			else
-			{
-				bot.z.setPosition(0);
-				bot.z.function = func_idle;
+			bot.z.setPosition(0);
+			z_function = func_idle;
 
-				if (z_notify != 255)
-					notifyTargetReached(z_notify, Z_ADDRESS);
-			}
+			if (z_notify != 255)
+				notifyTargetReached(z_notify, Z_ADDRESS);
 		}
 	}
 }
@@ -132,21 +133,21 @@ void setup()
 
 	//set our speed.
 	bot.x.stepper.setRPM(speed);
-	bot.setTimer(bot.x.stepper.getSpeed());
+	bot.setTimer(bot.x.stepper.step_delay);
 
 	//debug info.
 	Serial.print("RPM: ");
-	Serial.println((int)bot.x.stepper.getRPM());
+	Serial.println((int)bot.x.stepper.rpm);
 	Serial.print("Speed: ");
-	Serial.println(bot.x.stepper.getSpeed());
+	Serial.println(bot.x.stepper.step_delay);
 	
 	//tell all axes to go home.
-	bot.x.function = func_homereset;
-	bot.y.function = func_homereset;
-	bot.z.function = func_homereset;
+	x_function = func_homereset;
+	y_function = func_homereset;
+	z_function = func_homereset;
 
 	//start the homereset deal.
-	bot.startHomeReset();
+	bot.enableTimerInterrupt();
 }
 
 void loop()

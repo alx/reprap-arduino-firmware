@@ -56,36 +56,33 @@ int speed = 200;
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)
 {
-	if (bot.mode == MODE_SEEK)
-	{
-		if (bot.x.can_step)
-			bot.x.doStep();
+	if (bot.x.can_step)
+		bot.x.doStep();
 
-		if (bot.y.can_step)
-			bot.y.doStep();
+	if (bot.y.can_step)
+		bot.y.doStep();
 
-		if (bot.z.can_step)
-			bot.z.doStep();
-	}
+	if (bot.z.can_step)
+		bot.z.doStep();
 }
 	
 void setup()
 {
 	bot.setupTimerInterrupt();
+	bot.enableTimerInterrupt();
 
 	bot.x.stepper.setRPM(speed);
 	bot.y.stepper.setRPM(speed);
 	bot.z.stepper.setRPM(speed);
-	bot.setTimer(bot.x.stepper.getSpeed());
-	bot.startSeek();
+	bot.setTimer(bot.x.stepper.step_delay);
 	
 	Serial.begin(57600);
 	Serial.println("Starting 3 axis exerciser.");
 
 	Serial.print("RPM: ");
-	Serial.println((int)bot.x.stepper.getRPM());
+	Serial.println((int)bot.x.stepper.rpm);
 	Serial.print("Speed: ");
-	Serial.println(bot.x.stepper.getSpeed());
+	Serial.println(bot.x.stepper.step_delay);
 
 	p.x = 6000;
 	p.y = 0;
@@ -122,20 +119,20 @@ void loop()
 	{
 		speed = random(200, 255);
 		bot.x.stepper.setRPM(speed);
-		bot.setTimer(bot.x.stepper.getSpeed());
+		bot.setTimer(bot.x.stepper.step_delay);
 		bot.getNextPoint();
 
 		Serial.print("Setting RPM to ");
 		Serial.println(speed);
 		Serial.print("Speed is now: ");
-		Serial.println(bot.x.stepper.getSpeed());
+		Serial.println(bot.x.stepper.step_delay);
 
 		Serial.print("Seeking to ");
-		Serial.print(bot.x.getTarget());
+		Serial.print(bot.x.target);
 		Serial.print(", ");
-		Serial.print(bot.y.getTarget());
+		Serial.print(bot.y.target);
 		Serial.print(", ");
-		Serial.print(bot.z.getTarget());
+		Serial.print(bot.z.target);
 		Serial.print(" at clock ");
 		Serial.println((int)OCR1A);
 	}

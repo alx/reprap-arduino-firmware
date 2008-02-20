@@ -146,11 +146,11 @@ void loop()
 		//dda diagnostics
 		Serial.println("DDA info");
 		Serial.print("Deltas: ");
-		Serial.print((int)bot.x.getDelta());
+		Serial.print((int)bot.x.delta);
 		Serial.print(", ");
-		Serial.print((int)bot.y.getDelta());
+		Serial.print((int)bot.y.delta);
 		Serial.print(", ");
-		Serial.println((int)bot.z.getDelta());
+		Serial.println((int)bot.z.delta);
 		Serial.print("Max Delta: ");
 		Serial.println((int)bot.max_delta);
 

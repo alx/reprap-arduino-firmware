@@ -75,27 +75,17 @@ void setup()
 
 void loop()
 {	
-	//snap.debug();
-	//Serial.println("L");
-	
 	//get our state status / manage our status.
 	bot.readState();
-//	snap.debug();
-//	Serial.println("R");
 
 	//do the loop commands.
 	cartesian_bot_snap_v1_loop();
-//	snap.debug();
-//	Serial.println("C");
 
 	//extruder.manageTemperature();
 	
 	//process our commands
 	if (snap.packetReady())
 	{
-//		snap.debug();
-//		Serial.println("PR");
-
   		//who is it for?
 		byte dest = snap.getDestination();
 
@@ -104,16 +94,9 @@ void loop()
 			process_thermoplast_extruder_snap_commands_v1();
 		else if(dest == X_ADDRESS || dest == Y_ADDRESS || dest == Z_ADDRESS)
 			process_cartesian_bot_snap_commands_v1();
-
-//		snap.debug();
-//		Serial.println("PF");
 		
 		snap.releaseLock();
 	}
 	else
 		snap.receivePacket();
-	
-//	snap.debug();
-//	Serial.println("F");
-//	delay(25);
 }
