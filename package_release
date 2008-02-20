@@ -24,6 +24,8 @@ svn export 3Axis_Sensor_Tester "$TO_DIR/testers/3Axis_Sensor_Tester"
 svn export 3Axis_Seek_Tester "$TO_DIR/testers/3Axis_Seek_Tester"
 svn export 3Axis_Speed_Tester "$TO_DIR/testers/3Axis_Speed_Tester"
 svn export ../library "$TO_DIR/library"
+svn export ../gcode_host "$TO_DIR/gcode/gcode_host"
+
 
 cp README "$TO_DIR/"
 cp LICENSE "$TO_DIR/"
