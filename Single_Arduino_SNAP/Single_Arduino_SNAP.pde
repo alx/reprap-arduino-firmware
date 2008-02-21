@@ -75,9 +75,6 @@ void setup()
 
 void loop()
 {	
-	//get our state status / manage our status.
-	bot.readState();
-
 	//do the loop commands.
 	cartesian_bot_snap_v1_loop();
 	extruder.manageTemperature();
