@@ -67,7 +67,7 @@ void setup()
 	
 	//run any setup code we need.
 	setup_cartesian_bot_snap_v1();
-	//setup_extruder_snap_v1();
+	setup_extruder_snap_v1();
 	
 	snap.debug();
 	Serial.println("BEGIN");
@@ -80,8 +80,7 @@ void loop()
 
 	//do the loop commands.
 	cartesian_bot_snap_v1_loop();
-
-	//extruder.manageTemperature();
+	extruder.manageTemperature();
 	
 	//process our commands
 	if (snap.packetReady())
