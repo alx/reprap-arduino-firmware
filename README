@@ -12,6 +12,10 @@ all the folders contained in this directory need to be copied into the library f
 
 these are the firmwares that you would actually upload to the Arduino itself.  each folder is a 'sketch' that you open with the Arduino software and load onto your board.  the top of each file contains pin definitions that will help you hook up your electronics to your Arduino.
 
+/gcode
+
+this folder contains some experimental software that implements GCode on the Arduino!  there are 2 different programs:  there is a GCode Interpreter which runs on the Arduino and a GCode host which reads the GCode commands and sends them to the firmware one at a time.
+
 /snap/3Axis_SNAP
 
 this is the firmware that controls 3 stepper motors + limit switches on one Arduino.  this is for 2 arduino setups where one firmware controls the cartesian bot and the other controls the extruder(s)
