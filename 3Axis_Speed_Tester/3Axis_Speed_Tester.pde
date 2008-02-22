@@ -4,6 +4,7 @@
 	History:
 	* (0.1) Created initial version by Zach Smith <hoeken@rrrf.org>.
 	* (0.2) Updated to work with recent optimizations by Zach Smith.
+	* (0.3) Updated with new library changes by Zach Smith.
 
 	License: GPL v2.0
 */

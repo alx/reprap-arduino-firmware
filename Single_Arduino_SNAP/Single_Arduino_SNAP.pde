@@ -4,6 +4,7 @@
 	History:
 	* (0.1) Created initial version by Zach Smith.
 	* (0.2) Updated to work with the various optimizations and extruder emulation by Zach Smith
+	* (0.3) Updated with new library changes by Zach Smith.
 	
 	License: GPL v2.0
 */
