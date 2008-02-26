@@ -1,26 +1,33 @@
 //Read the string and execute instructions
 void process_string(char instruction[], int size)
 {
-	Point p;
-	p.x = 0.0;
-	p.y = 0.0;
-	p.z = 0.0;
+	FloatPoint fp;
+	fp.x = 0.0;
+	fp.y = 0.0;
+	fp.z = 0.0;
 
-	//what is our speed?
-	int feedrate = 0;
+	LongPoint lp;
+	lp.x = 0.0;
+	lp.y = 0.0;
+	lp.z = 0.0;
+
+	//vars for our feedrate calculations
+	float feedrate = 0.0;
+	float distance = 0.0;
+	long micros = 0;
+	long master_steps = 0;
+	
+	//special mcode?
 	int m_code = 0;
 	
 	//which mode are we in?
 	static boolean abs_mode = false;   //0 = incremental; 1 = absolute
 
-	//a bit of debug info.
-	//Serial.print("Got:");  
-	//Serial.println(instruction);    
-
 	//what is your command?
 	char temp_word[2] = {instruction[1], instruction[2]};
 	int word = -1;
 	
+	//did we get a GCode
 	if (instruction[0] == 'G')
 		word = atoi(temp_word);
 
@@ -31,32 +38,112 @@ void process_string(char instruction[], int size)
 		//these are basically the same thing.
 		case 0:
 		case 1:
-			p.x = (long)(search_string('X', instruction, size) * x_units);
-			p.y = (long)(search_string('Y', instruction, size) * y_units);
-			p.z = (long)(search_string('Z', instruction, size) * z_units);
-  
-			//TODO: units of speed
-			if (word == 1)
-			{
-				if (search_string('F', instruction, size))
-					feedrate = (int)(search_string('F', instruction, size));
-			}
+		
+			//load it as raw units.
+			fp.x = search_string('X', instruction, size);
+			fp.y = search_string('Y', instruction, size);
+			fp.z = search_string('Z', instruction, size);
+			
+			
+			//convert to steps.
+			lp.x = (long)(fp.x * x_units);
+			lp.y = (long)(fp.y * y_units);
+			lp.z = (long)(fp.z * z_units);
 
+			//set our target.
 			if(abs_mode)
 			{
-				x.setTarget(p.x);
-				y.setTarget(p.y);	
-				z.setTarget(p.z);
+				x.setTarget(lp.x);
+				y.setTarget(lp.y);	
+				z.setTarget(lp.z);
+	
+				target.x = fp.x;
+				target.y = fp.y;
+				target.z = fp.z;
+				
+				delta.x = abs(target.x - current.x);
+				delta.y = abs(target.x - current.x);
+				delta.z = abs(target.x - current.x);
 			}
 			else
 			{
-				x.setTarget(x.current + p.x);
-				y.setTarget(y.current + p.y);
-				z.setTarget(z.current + p.z);
+				x.setTarget(x.current + lp.x);
+				y.setTarget(y.current + lp.y);
+				z.setTarget(z.current + lp.z);
+
+				target.x = abs(target.x - current.x);
+				target.y = abs(target.x - current.x);
+				target.z = abs(target.x - current.x);
+
+				delta.x = fp.x;
+				delta.y = fp.y;
+				delta.z = fp.z;
 			}
+			
+			//figure out our max speed.
+			micros = getMaxSpeed();
 
-			ddaMove();
+			//adjust if we have a specific feedrate.
+			if (word == 1)
+			{
+				//how fast do we move?
+				feedrate = search_string('F', instruction, size);
 
+				Serial.print("feedrate:");
+				Serial.println((int)(feedrate * 100), DEC);
+
+				Serial.print("x:");
+				Serial.println((int)(delta.x * 100), DEC);
+				Serial.print("y:");
+				Serial.println((int)(delta.y * 100), DEC);
+				Serial.print("z:");
+				Serial.println((int)(delta.z * 100), DEC);
+
+
+				if (feedrate > 0)
+				{
+					//how long is our line length?
+					distance = sqrt(delta.x*delta.x + delta.y*delta.y + delta.z*delta.z);
+
+					//find the dominant axis units.
+					if (x.delta > y.delta)
+					{
+						if (z.delta > x.delta)
+							master_steps = delta.z * z_units;
+						else
+							master_steps = delta.x * x_units;
+					}
+					else
+					{
+						if (z.delta > y.delta)
+							master_steps = delta.z * z_units;
+						else
+							master_steps = delta.y * y_units;
+					}
+					
+					//calculate delay in microseconds.  this is sort of tricky, but not too bad.
+					//the formula has been condensed to save space.  here it is in english:
+					// micros = 60,000,000
+					// step_delay = total_ticks_in_move / steps_per_unit
+					// step_delay = processor ticks between steps
+					// total_ticks_in_move = minutes_in_move * ticks_per_minute
+					// minutes_in_move = distance / feedrate
+					
+					//we want the slowest speed (biggest delay) incase too big of a feedrate is specified
+					micros = max(micros, ((distance / feedrate * 60000000.0) / master_steps));
+				}
+			}
+			
+			Serial.print("delay:");
+			Serial.println(micros);
+
+			//finally move.
+			ddaMove(micros);
+			
+			//set our points to be the same
+			current.x = target.x;
+			current.y = target.y;
+			current.z = target.z;
 		break;
 
 		//Dwell
@@ -84,35 +171,45 @@ void process_string(char instruction[], int size)
 			y.setTarget(0);
 			z.setTarget(0);
 			
-			ddaMove();
+			ddaMove(getMaxSpeed());
+			
+			current.x = 0.0;
+			current.y = 0.0;
+			current.z = 0.0;
 		break;
 		
 		//go home via an intermediate point.
 		case 30:
-			p.x = (long)(search_string('X', instruction, size) * x_units);
-			p.y = (long)(search_string('Y', instruction, size) * y_units);
-			p.z = (long)(search_string('Z', instruction, size) * z_units);
+			lp.x = (long)(search_string('X', instruction, size) * x_units);
+			lp.y = (long)(search_string('Y', instruction, size) * y_units);
+			lp.z = (long)(search_string('Z', instruction, size) * z_units);
 
 			if(abs_mode)
 			{
-				x.setTarget(p.x);
-				y.setTarget(p.y);
-				z.setTarget(p.z);
+				x.setTarget(lp.x);
+				y.setTarget(lp.y);
+				z.setTarget(lp.z);
 			}
 			else
 			{
-				x.setTarget(x.current + p.x);
-				y.setTarget(y.current + p.y);
-				z.setTarget(z.current + p.z);
+				x.setTarget(x.current + lp.x);
+				y.setTarget(y.current + lp.y);
+				z.setTarget(z.current + lp.z);
 			}
 			
-			ddaMove();
+			ddaMove(getMaxSpeed());
 
 			x.setTarget(0);
 			y.setTarget(0);
 			z.setTarget(0);
 			
-			ddaMove();
+			ddaMove(getMaxSpeed());
+			
+			//update our current units.
+			current.x = 0.0;
+			current.y = 0.0;
+			current.z = 0.0;
+			
 		break;
 			
 		//Absolute Positioning
@@ -131,6 +228,11 @@ void process_string(char instruction[], int size)
 			x.setPosition(0);
 			y.setPosition(0);
 			z.setPosition(0);
+			
+			//update our current units.
+			current.x = 0.0;
+			current.y = 0.0;
+			current.z = 0.0;
 		break;
 
 		//Inverse Time Feed Mode

@@ -67,6 +67,23 @@ LinearAxis z('z', Z_MOTOR_STEPS, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN, Z_
 
 ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_FAN_PIN, EXTRUDER_THERMISTOR_PIN);
 
+// our point structure to make things nice.
+struct LongPoint {
+	long x;
+	long y;
+ 	long z;
+};
+
+struct FloatPoint {
+	float x;
+	float y;
+ 	float z;
+};
+
+FloatPoint current;
+FloatPoint target;
+FloatPoint delta;
+
 void setup()
 {
 	//Do startup stuff here
@@ -81,6 +98,14 @@ void setup()
 	extruder.setTemperature(21);
 	extruder.heater_low = 64;
 	extruder.heater_high = 255;
+	
+	current.x = 0.0;
+	current.y = 0.0;
+	current.z = 0.0;
+	
+	target.x = 0.0;
+	target.y = 0.0;
+	target.z = 0.0;
 }
 
 void loop()

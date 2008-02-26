@@ -1,16 +1,10 @@
 
-void ddaMove()
+void ddaMove(long micro_delay)
 {
-	int delay;
-	int max_delta = 0;
-	int x_counter = 0;
-	int y_counter = 0;
-	int z_counter = 0;
-	
-	if (z.delta != 0)
-		delay = z.stepper.getMicros();
-	else
-		delay = min(x.stepper.getMicros(), y.stepper.getMicros());
+	long max_delta = 0;
+	long x_counter = 0;
+	long y_counter = 0;
+	long z_counter = 0;
 	
 	//figure out our deltas
 	max_delta = max(x.delta, max_delta);
@@ -60,7 +54,16 @@ void ddaMove()
 			}
 		}
 		
-		delayMicroseconds(delay);
+		delayMicroseconds(micro_delay);
 	}
 	while (x.can_step || y.can_step || z.can_step);
+}
+
+long getMaxSpeed()
+{
+	//calculate our speed. assume we're moving at max first.
+	if (z.delta != 0)
+		return z.stepper.getMicros();
+	else
+		return min(x.stepper.getMicros(), y.stepper.getMicros());
 }
