@@ -1,6 +1,7 @@
 
 void ddaMove(long micro_delay)
 {
+	long millis = micro_delay/1000;
 	long max_delta = 0;
 	long x_counter = 0;
 	long y_counter = 0;
@@ -54,7 +55,10 @@ void ddaMove(long micro_delay)
 			}
 		}
 		
-		delayMicroseconds(micro_delay);
+		if (micro_delay <= 16383)
+			delayMicroseconds(micro_delay);
+		else
+			delay(millis);
 	}
 	while (x.can_step || y.can_step || z.can_step);
 }

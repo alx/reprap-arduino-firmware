@@ -62,8 +62,8 @@ void process_string(char instruction[], int size)
 				target.z = fp.z;
 				
 				delta.x = abs(target.x - current.x);
-				delta.y = abs(target.x - current.x);
-				delta.z = abs(target.x - current.x);
+				delta.y = abs(target.y - current.y);
+				delta.z = abs(target.z - current.z);
 			}
 			else
 			{
@@ -71,13 +71,13 @@ void process_string(char instruction[], int size)
 				y.setTarget(y.current + lp.y);
 				z.setTarget(z.current + lp.z);
 
-				target.x = abs(target.x - current.x);
-				target.y = abs(target.x - current.x);
-				target.z = abs(target.x - current.x);
+				target.x = current.x + target.x;
+				target.y = current.y + target.y;
+				target.z = current.z + target.z;
 
-				delta.x = fp.x;
-				delta.y = fp.y;
-				delta.z = fp.z;
+				delta.x = abs(fp.x);
+				delta.y = abs(fp.y);
+				delta.z = abs(fp.z);
 			}
 			
 			//figure out our max speed.
@@ -88,18 +88,6 @@ void process_string(char instruction[], int size)
 			{
 				//how fast do we move?
 				feedrate = search_string('F', instruction, size);
-
-				Serial.print("feedrate:");
-				Serial.println((int)(feedrate * 100), DEC);
-
-				Serial.print("x:");
-				Serial.println((int)(delta.x * 100), DEC);
-				Serial.print("y:");
-				Serial.println((int)(delta.y * 100), DEC);
-				Serial.print("z:");
-				Serial.println((int)(delta.z * 100), DEC);
-
-
 				if (feedrate > 0)
 				{
 					//how long is our line length?
@@ -133,9 +121,6 @@ void process_string(char instruction[], int size)
 					micros = max(micros, ((distance / feedrate * 60000000.0) / master_steps));
 				}
 			}
-			
-			Serial.print("delay:");
-			Serial.println(micros);
 
 			//finally move.
 			ddaMove(micros);
