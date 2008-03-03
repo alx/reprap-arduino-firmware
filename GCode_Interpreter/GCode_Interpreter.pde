@@ -84,6 +84,8 @@ FloatPoint current;
 FloatPoint target;
 FloatPoint delta;
 
+#define COMMAND_SIZE 128
+
 void setup()
 {
 	//Do startup stuff here
@@ -111,8 +113,8 @@ void setup()
 void loop()
 {
 	char c;
-	char word[256] = "";  //TODO: magic numbers are bad
-	int serial_count;
+	char word[COMMAND_SIZE] = "";  //TODO: magic numbers are bad
+	byte serial_count;
 
 	if (Serial.available() > 0)
 	{
