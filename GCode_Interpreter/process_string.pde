@@ -268,16 +268,6 @@ void process_string(char instruction[], int size)
 				//todo: program end
 			break;
 	*/		
-			//turn fan on
-			case 7:
-				extruder.setCooler(255);
-			break;
-
-			//turn fan off
-			case 9:
-				extruder.setCooler(0);
-			break;
-
 			//set max extruder speed, 0-255 PWM
 			case 100:
 				extruder_speed = (int)(search_string('P', instruction, size));
@@ -317,6 +307,16 @@ void process_string(char instruction[], int size)
 			case 105:
 				Serial.print("Temp:");
 				Serial.println(extruder.getTemperature());
+			break;
+			
+			//turn fan on
+			case 106:
+				extruder.setCooler(255);
+			break;
+
+			//turn fan off
+			case 107:
+				extruder.setCooler(0);
 			break;
 
 			default:
