@@ -84,13 +84,22 @@ FloatPoint current;
 FloatPoint target;
 FloatPoint delta;
 
+//our command string
 #define COMMAND_SIZE 128
+char word[COMMAND_SIZE];
+byte serial_count;
+byte no_data = 0;
 
 void setup()
 {
 	//Do startup stuff here
 	Serial.begin(19200);
 	Serial.println("start");
+	
+	//init our command
+	for (byte i=0; i<COMMAND_SIZE; i++)
+		word[i] = 0;
+	serial_count = 0;
 	
 	x.stepper.setRPM(X_MAX_SPEED);
 	y.stepper.setRPM(Y_MAX_SPEED);
@@ -113,29 +122,41 @@ void setup()
 void loop()
 {
 	char c;
-	char word[COMMAND_SIZE] = "";  //TODO: magic numbers are bad
-	byte serial_count;
+	
+	//keep it hot!
+	extruder.manageTemperature();
 
+	//read in characters if we got them.
 	if (Serial.available() > 0)
 	{
-		serial_count = 0;
-		while(Serial.available() > 0)
+		c = Serial.read();
+		no_data = 0;
+		
+		//newlines are ends of commands.
+		if (c != '\n')
 		{
-			c = Serial.read();
-			
-			if (c == '\n')
-				break;
-				
 			word[serial_count] = c;
-			delayMicroseconds(1000);  //TODO: is there a better way to wait for serial?
 			serial_count++;
 		}
-		word[serial_count] = ' '; //TODO: kinda hacky
-
-		process_string(word, sizeof(word));
-
-		Serial.println("done");
+		else
+			Serial.println("newline");
 	}
-	
-	extruder.manageTemperature();
+	//mark no data.
+	else
+	{
+		no_data++;
+		delayMicroseconds(10);
+	}
+
+	//if theres a pause or we got a real command, do it
+	if (serial_count && (c == '\n' || no_data > 100))
+	{
+		//process our command!
+		process_string(word, serial_count);
+
+		//clear command.
+		for (byte i=0; i<COMMAND_SIZE; i++)
+			word[i] = 0;
+		serial_count = 0;
+	}
 }

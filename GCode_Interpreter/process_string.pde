@@ -23,15 +23,16 @@ void process_string(char instruction[], int size)
 	//which mode are we in?
 	static boolean abs_mode = false;   //0 = incremental; 1 = absolute
 
-/*
-	//what is your command?
-	char temp_word[2] = {instruction[1], instruction[2]};
-	int word = -1;
+	//what line are we at?
+	long line = -1;
+	if (has_command('N', instruction, size))
+		line = (long)search_string('N', instruction, size);
 	
-	//did we get a GCode
-	if (instruction[0] == 'G')
-		word = atoi(temp_word);
-*/
+//	Serial.print("line: ");
+//	Serial.println(instruction);
+//	Serial.print("size: ");
+//	Serial.println(size+1);
+		
 	//did we get a gcode?
 	if (has_command('G', instruction, size))
 	{
@@ -239,12 +240,11 @@ void process_string(char instruction[], int size)
 */
 
 			default:
-				Serial.print("Unknown: G"); 
+				Serial.print("huh? G"); 
 				Serial.println(code);      
 		}		
 	}
-
-	
+		
 	//find us an m code.
 	if (has_command('M', instruction, size))
 	{
@@ -279,7 +279,7 @@ void process_string(char instruction[], int size)
 				while (extruder.getTemperature() < extruder.target_celsius)
 				{
 					extruder.manageTemperature();
-					Serial.print("Temp:");
+					Serial.print("T:");
 					Serial.println(extruder.getTemperature());
 					delay(1000);	
 				}
@@ -305,7 +305,7 @@ void process_string(char instruction[], int size)
 
 			//custom code for temperature reading
 			case 105:
-				Serial.print("Temp:");
+				Serial.print("T:");
 				Serial.println(extruder.getTemperature());
 			break;
 			
@@ -320,11 +320,19 @@ void process_string(char instruction[], int size)
 			break;
 
 			default:
-				Serial.print("Unknown: M");
+				Serial.print("Huh? M");
 				Serial.println(code);
 		}		
 	}
-
+	
+	//tell our host we're done.
+	if (line > -1)
+	{
+		Serial.print("ok:");
+		Serial.println(line, DEC);
+	}
+	else
+		Serial.println("ok.");
   
 	instruction = NULL;
 }
@@ -340,8 +348,11 @@ double search_string(char key, char instruction[], int string_size)
 		{
 			i++;      
 			int k = 0;
-			while (instruction[i] != (' ' | NULL))
+			while (i < string_size && k < 10)
 			{
+				if (instruction[i] == 0 || instruction[i] == ' ')
+					break;
+
 				temp[k] = instruction[i];
 				i++;
 				k++;
