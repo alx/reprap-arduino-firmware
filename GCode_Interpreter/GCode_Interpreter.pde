@@ -14,11 +14,13 @@
 #define X_MIN_PIN 4
 #define X_MAX_PIN 9
 #define X_ENABLE_PIN 15
+
 #define Y_STEP_PIN 10
 #define Y_DIR_PIN 7
 #define Y_MIN_PIN 8
 #define Y_MAX_PIN 13
 #define Y_ENABLE_PIN 15
+
 #define Z_STEP_PIN 19
 #define Z_DIR_PIN 18
 #define Z_MIN_PIN 17
@@ -35,35 +37,34 @@
 // define the parameters of our machine.
 float X_STEPS_PER_INCH  = 416.772354;
 float X_STEPS_PER_MM    = 16.4083604;
-int   X_MAX_SPEED       = 20;
 int   X_MOTOR_STEPS     = 400;
 
 float Y_STEPS_PER_INCH  = 416.772354;
 float Y_STEPS_PER_MM    = 16.4083604;
-int   Y_MAX_SPEED       = 20;
 int   Y_MOTOR_STEPS     = 400;
 
 float Z_STEPS_PER_INCH  = 16256.0;
 float Z_STEPS_PER_MM    = 640.0;
-int   Z_MAX_SPEED       = 40;
 int   Z_MOTOR_STEPS     = 400;
+
+#define FAST_XY_FEEDRATE 1000.0
+#define FAST_Z_FEEDRATE  50.0
 
 //default to inches for units
 float x_units = X_STEPS_PER_INCH;
 float y_units = Y_STEPS_PER_INCH;
 float z_units = Z_STEPS_PER_INCH;
 
+//our direction vars
+byte x_direction = 1;
+byte y_direction = 1;
+byte z_direction = 1;
+
 //these our the default values for the extruder.
 int extruder_speed = 128;
 
 #include <HardwareSerial.h>
-#include <RepStepper.h>
-#include <LinearAxis.h>
 #include <ThermoplastExtruder.h>
-
-LinearAxis x('x', X_MOTOR_STEPS, X_DIR_PIN, X_STEP_PIN, X_MIN_PIN, X_MAX_PIN, X_ENABLE_PIN);
-LinearAxis y('y', Y_MOTOR_STEPS, Y_DIR_PIN, Y_STEP_PIN, Y_MIN_PIN, Y_MAX_PIN, Y_ENABLE_PIN);
-LinearAxis z('z', Z_MOTOR_STEPS, Z_DIR_PIN, Z_STEP_PIN, Z_MIN_PIN, Z_MAX_PIN, Z_ENABLE_PIN);
 
 ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_FAN_PIN, EXTRUDER_THERMISTOR_PIN);
 
@@ -80,15 +81,21 @@ struct FloatPoint {
  	float z;
 };
 
-FloatPoint current;
-FloatPoint target;
-FloatPoint delta;
+FloatPoint current_units;
+FloatPoint target_units;
+FloatPoint delta_units;
+
+FloatPoint current_steps;
+FloatPoint target_steps;
+FloatPoint delta_steps;
 
 //our command string
 #define COMMAND_SIZE 128
 char word[COMMAND_SIZE];
 byte serial_count;
-byte no_data = 0;
+int no_data = 0;
+
+boolean abs_mode = false;   //0 = incremental; 1 = absolute
 
 void setup()
 {
@@ -101,22 +108,39 @@ void setup()
 		word[i] = 0;
 	serial_count = 0;
 	
-	x.stepper.setRPM(X_MAX_SPEED);
-	y.stepper.setRPM(Y_MAX_SPEED);
-	z.stepper.setRPM(Z_MAX_SPEED);
-	
 	//default to room temp.
 	extruder.setTemperature(21);
 	extruder.heater_low = 64;
 	extruder.heater_high = 255;
 	
-	current.x = 0.0;
-	current.y = 0.0;
-	current.z = 0.0;
+	//init our points.
+	current_units.x = 0.0;
+	current_units.y = 0.0;
+	current_units.z = 0.0;
+	target_units.x = 0.0;
+	target_units.y = 0.0;
+	target_units.z = 0.0;
 	
-	target.x = 0.0;
-	target.y = 0.0;
-	target.z = 0.0;
+	//figure our stuff.
+	calculate_deltas();
+	
+	pinMode(X_STEP_PIN, OUTPUT);
+	pinMode(X_DIR_PIN, OUTPUT);
+	pinMode(X_ENABLE_PIN, OUTPUT);
+	pinMode(X_MIN_PIN, INPUT);
+	pinMode(X_MAX_PIN, INPUT);
+	
+	pinMode(Y_STEP_PIN, OUTPUT);
+	pinMode(Y_DIR_PIN, OUTPUT);
+	pinMode(Y_ENABLE_PIN, OUTPUT);
+	pinMode(Y_MIN_PIN, INPUT);
+	pinMode(Y_MAX_PIN, INPUT);
+	
+	pinMode(Z_STEP_PIN, OUTPUT);
+	pinMode(Z_DIR_PIN, OUTPUT);
+	pinMode(Z_ENABLE_PIN, OUTPUT);
+	pinMode(Z_MIN_PIN, INPUT);
+	pinMode(Z_MAX_PIN, INPUT);
 }
 
 void loop()
@@ -138,8 +162,6 @@ void loop()
 			word[serial_count] = c;
 			serial_count++;
 		}
-		else
-			Serial.println("newline");
 	}
 	//mark no data.
 	else
