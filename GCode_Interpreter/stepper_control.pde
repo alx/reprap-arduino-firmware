@@ -1,3 +1,12 @@
+//init our variables
+long max_delta;
+long x_counter;
+long y_counter;
+long z_counter;
+bool x_can_step;
+bool y_can_step;
+bool z_can_step;
+int milli_delay;
 
 void dda_move(long micro_delay)
 {
@@ -6,14 +15,8 @@ void dda_move(long micro_delay)
 	digitalWrite(Y_ENABLE_PIN, HIGH);
 	digitalWrite(Z_ENABLE_PIN, HIGH);
 	
-	//init our variables
-	//micro_delay -= 30;
-	long millis = micro_delay/1000;
-	long max_delta = 0;
-	
 	//figure out our deltas
-	max_delta = max(delta_steps.x, max_delta);
-	max_delta = max(delta_steps.y, max_delta);
+	max_delta = max(delta_steps.x, delta_steps.y);
 	max_delta = max(delta_steps.z, max_delta);
 
 	//init stuff.
@@ -25,6 +28,11 @@ void dda_move(long micro_delay)
 	bool x_can_step = 0;
 	bool y_can_step = 0;
 	bool z_can_step = 0;
+	
+	if (micro_delay >= 16383)
+		milli_delay = micro_delay / 1000;
+	else
+		milli_delay = 0;
 
 /*	
 	Serial.print("max:");
@@ -43,9 +51,7 @@ void dda_move(long micro_delay)
 */
 	//do our DDA line!
 	do
-	{		
-		extruder.manageTemperature();
-
+	{
 		x_can_step = can_step(X_MIN_PIN, X_MAX_PIN, current_steps.x, target_steps.x, x_direction);
 		y_can_step = can_step(Y_MIN_PIN, Y_MAX_PIN, current_steps.y, target_steps.y, y_direction);
 		z_can_step = can_step(Z_MIN_PIN, Z_MAX_PIN, current_steps.z, target_steps.z, z_direction);
@@ -97,11 +103,14 @@ void dda_move(long micro_delay)
 					current_steps.z--;
 			}
 		}
+		
+		extruder.manageTemperature();
 				
-		if (micro_delay < 16383)
-			delayMicroseconds(micro_delay);
+		//wait for next step.
+		if (milli_delay > 0)
+			delay(milli_delay);			
 		else
-			delay(millis);
+			delayMicroseconds(micro_delay);
 	}
 	while (x_can_step || y_can_step || z_can_step);
 	

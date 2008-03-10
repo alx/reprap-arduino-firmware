@@ -1,22 +1,19 @@
+FloatPoint fp;
+float feedrate;
+long feedrate_micros;
+byte code;
+
 //Read the string and execute instructions
 void process_string(char instruction[], int size)
 {
-	FloatPoint fp;
 	fp.x = 0.0;
 	fp.y = 0.0;
 	fp.z = 0.0;
-
-	//vars for our feedrate calculations
-	float feedrate = 0.0;
-	long micros = 0;
 	
-	//special code?
-	byte code = 0;
-	
-	//what line are we at?
-	long line = -1;
-	if (has_command('N', instruction, size))
-		line = (long)search_string('N', instruction, size);
+//what line are we at?
+//	long line = -1;
+//	if (has_command('N', instruction, size))
+//		line = (long)search_string('N', instruction, size);
 	
 /*
 	Serial.print("line: ");
@@ -38,30 +35,36 @@ void process_string(char instruction[], int size)
 			case 0:
 			case 1:
 
-				//load it as raw units.
-				fp.x = search_string('X', instruction, size);
-				fp.y = search_string('Y', instruction, size);
-				fp.z = search_string('Z', instruction, size);
-
 				//set our target.
 				if(abs_mode)
 				{
-					if (!has_command('X', instruction, size))
+					//we do it like this to save time. makes curves better.
+					//eg. if only x and y are specified, we dont have to waste time looking up z.
+					if (has_command('X', instruction, size))
+						fp.x = search_string('X', instruction, size);
+					else
 						fp.x = current_units.x;
-					if (!has_command('Y', instruction, size))
+					
+					if (has_command('Y', instruction, size))
+						fp.y = search_string('Y', instruction, size);
+					else
 						fp.y = current_units.y;
-					if (!has_command('Z', instruction, size))
+					
+					if (has_command('Z', instruction, size))
+						fp.z = search_string('Z', instruction, size);
+					else
 						fp.z = current_units.z;
 						
 					set_target(fp.x, fp.y, fp.z);
 				}
 				else
 				{
+					fp.x = search_string('X', instruction, size);
+					fp.y = search_string('Y', instruction, size);
+					fp.z = search_string('Z', instruction, size);
+
 					set_target(current_units.x + fp.x, current_units.y + fp.y, current_units.z + fp.z);
 				}
-
-				//figure out our max speed.
-				micros = getMaxSpeed();
 
 				//adjust if we have a specific feedrate.
 				if (code == 1)
@@ -69,11 +72,17 @@ void process_string(char instruction[], int size)
 					//how fast do we move?
 					feedrate = search_string('F', instruction, size);
 					if (feedrate > 0)
-						micros = calculate_feedrate_delay(feedrate);
+						feedrate_micros = calculate_feedrate_delay(feedrate);
+					//nope, no feedrate
+					else
+						feedrate_micros = getMaxSpeed();
 				}
+				//use our max for normal moves.
+				else
+					feedrate_micros = getMaxSpeed();
 
 				//finally move.
-				dda_move(micros);
+				dda_move(feedrate_micros);
 			break;
 
 			//Dwell
@@ -197,14 +206,6 @@ void process_string(char instruction[], int size)
 
 			//turn extruder on, forward
 			case 101:
-				//warmup 	
-				while (extruder.getTemperature() < extruder.target_celsius)
-				{
-					extruder.manageTemperature();
-					Serial.print("T:");
-					Serial.println(extruder.getTemperature());
-					delay(1000);	
-				}
 				extruder.setDirection(1);
 				extruder.setSpeed(extruder_speed);
 			break;
@@ -223,6 +224,16 @@ void process_string(char instruction[], int size)
 			//custom code for temperature control
 			case 104:
 				extruder.setTemperature((int)search_string('P', instruction, size));
+
+				//warmup if we're too cold.
+				while (extruder.getTemperature() < extruder.target_celsius)
+				{
+					extruder.manageTemperature();
+					Serial.print("T:");
+					Serial.println(extruder.getTemperature());
+					delay(1000);	
+				}
+				
 			break;
 
 			//custom code for temperature reading
@@ -248,8 +259,8 @@ void process_string(char instruction[], int size)
 	}
 	
 	//tell our host we're done.
-	Serial.print("ok:");
-	Serial.println(line, DEC);
+	Serial.println("ok");
+//	Serial.println(line, DEC);
 }
 
 //look for the number that appears after the char key and return it
