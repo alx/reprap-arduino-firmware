@@ -1,14 +1,64 @@
-FloatPoint fp;
-float feedrate;
-long feedrate_micros;
-byte code;
+// our point structure to make things nice.
+struct LongPoint {
+	long x;
+	long y;
+ 	long z;
+};
+
+struct FloatPoint {
+	float x;
+	float y;
+ 	float z;
+};
+
+FloatPoint current_units;
+FloatPoint target_units;
+FloatPoint delta_units;
+
+FloatPoint current_steps;
+FloatPoint target_steps;
+FloatPoint delta_steps;
+
+boolean abs_mode = false;   //0 = incremental; 1 = absolute
+
+//default to inches for units
+float x_units = X_STEPS_PER_INCH;
+float y_units = Y_STEPS_PER_INCH;
+float z_units = Z_STEPS_PER_INCH;
+
+//our direction vars
+byte x_direction = 1;
+byte y_direction = 1;
+byte z_direction = 1;
+
+//init our string processing
+void init_process_string()
+{
+	//init our command
+	for (byte i=0; i<COMMAND_SIZE; i++)
+		word[i] = 0;
+	serial_count = 0;
+}
 
 //Read the string and execute instructions
 void process_string(char instruction[], int size)
 {
+	//the character / means delete block... used for comments and stuff.
+	if (instruction[0] == '/')
+	{
+		Serial.println("ok");
+		return;
+	}
+
+	//init baby!
+	FloatPoint fp;
 	fp.x = 0.0;
 	fp.y = 0.0;
 	fp.z = 0.0;
+
+	float feedrate = 0.0;
+	long feedrate_micros = 0;
+	byte code = 0;;
 	
 //what line are we at?
 //	long line = -1;
@@ -206,31 +256,31 @@ void process_string(char instruction[], int size)
 
 			//turn extruder on, forward
 			case 101:
-				extruder.setDirection(1);
-				extruder.setSpeed(extruder_speed);
+				extruder_set_direction(1);
+				extruder_set_speed(extruder_speed);
 			break;
 
 			//turn extruder on, reverse
 			case 102:
-				extruder.setDirection(0);
-				extruder.setSpeed(extruder_speed);
+				extruder_set_direction(0);
+				extruder_set_speed(extruder_speed);
 			break;
 
 			//turn extruder off
 			case 103:
-				extruder.setSpeed(0);
+				extruder_set_speed(0);
 			break;
 
 			//custom code for temperature control
 			case 104:
-				extruder.setTemperature((int)search_string('P', instruction, size));
+				extruder_set_temperature((int)search_string('P', instruction, size));
 
 				//warmup if we're too cold.
-				while (extruder.getTemperature() < extruder.target_celsius)
+				while (extruder_get_temperature() < extruder_target_celsius)
 				{
-					extruder.manageTemperature();
+					extruder_manage_temperature();
 					Serial.print("T:");
-					Serial.println(extruder.getTemperature());
+					Serial.println(extruder_get_temperature());
 					delay(1000);	
 				}
 				
@@ -239,17 +289,17 @@ void process_string(char instruction[], int size)
 			//custom code for temperature reading
 			case 105:
 				Serial.print("T:");
-				Serial.println(extruder.getTemperature());
+				Serial.println(extruder_get_temperature());
 			break;
 			
 			//turn fan on
 			case 106:
-				extruder.setCooler(255);
+				extruder_set_cooler(255);
 			break;
 
 			//turn fan off
 			case 107:
-				extruder.setCooler(0);
+				extruder_set_cooler(0);
 			break;
 
 			default:

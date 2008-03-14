@@ -8,6 +8,38 @@ bool y_can_step;
 bool z_can_step;
 int milli_delay;
 
+void init_steppers()
+{
+	//init our points.
+	current_units.x = 0.0;
+	current_units.y = 0.0;
+	current_units.z = 0.0;
+	target_units.x = 0.0;
+	target_units.y = 0.0;
+	target_units.z = 0.0;
+	
+	pinMode(X_STEP_PIN, OUTPUT);
+	pinMode(X_DIR_PIN, OUTPUT);
+	pinMode(X_ENABLE_PIN, OUTPUT);
+	pinMode(X_MIN_PIN, INPUT);
+	pinMode(X_MAX_PIN, INPUT);
+	
+	pinMode(Y_STEP_PIN, OUTPUT);
+	pinMode(Y_DIR_PIN, OUTPUT);
+	pinMode(Y_ENABLE_PIN, OUTPUT);
+	pinMode(Y_MIN_PIN, INPUT);
+	pinMode(Y_MAX_PIN, INPUT);
+	
+	pinMode(Z_STEP_PIN, OUTPUT);
+	pinMode(Z_DIR_PIN, OUTPUT);
+	pinMode(Z_ENABLE_PIN, OUTPUT);
+	pinMode(Z_MIN_PIN, INPUT);
+	pinMode(Z_MAX_PIN, INPUT);
+	
+	//figure our stuff.
+	calculate_deltas();
+}
+
 void dda_move(long micro_delay)
 {
 	//enable our steppers
@@ -104,7 +136,7 @@ void dda_move(long micro_delay)
 			}
 		}
 		
-		extruder.manageTemperature();
+		extruder_manage_temperature();
 				
 		//wait for next step.
 		if (milli_delay > 0)
@@ -241,4 +273,12 @@ long getMaxSpeed()
 		return calculate_feedrate_delay(FAST_Z_FEEDRATE);
 	else
 		return calculate_feedrate_delay(FAST_XY_FEEDRATE);
+}
+
+void disable_steppers()
+{
+	//enable our steppers
+	digitalWrite(X_ENABLE_PIN, LOW);
+	digitalWrite(Y_ENABLE_PIN, LOW);
+	digitalWrite(Z_ENABLE_PIN, LOW);
 }
