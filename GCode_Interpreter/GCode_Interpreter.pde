@@ -50,7 +50,7 @@ void loop()
 	}
 
 	//if theres a pause or we got a real command, do it
-	if (serial_count && (c == '\n' || no_data > 10))
+	if (serial_count && (c == '\n' || no_data > 100))
 	{
 		//process our command!
 		process_string(word, serial_count);

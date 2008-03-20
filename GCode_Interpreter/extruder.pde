@@ -53,7 +53,7 @@ void extruder_set_direction(byte direction)
 
 void extruder_set_speed(byte speed)
 {
-	analogWrite(EXTRUDER_MOTOR_DIR_PIN, speed);
+	analogWrite(EXTRUDER_MOTOR_SPEED_PIN, speed);
 }
 
 void extruder_set_cooler(byte speed)
