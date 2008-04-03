@@ -1,6 +1,7 @@
 // Arduino G-code Interpreter
-// v1.0 by Mike Ellery (mellery@gmail.com)
-// v1.1 by Zach Smith  (hoeken@gmail.com)
+// v1.0 by Mike Ellery - initial software (mellery@gmail.com)
+// v1.1 by Zach Smith - cleaned up and did lots of tweaks (hoeken@gmail.com)
+// v1.2 by Chris Meighan - cleanup / G2&G3 support (cmeighan@gmail.com)
 
 #include <HardwareSerial.h>
 
