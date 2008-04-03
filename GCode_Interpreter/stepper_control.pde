@@ -178,8 +178,12 @@ void do_step(byte step_pin)
 
 bool read_switch(byte pin)
 {
-	//dual read as crude debounce.
-	return digitalRead(pin) && digitalRead(pin);
+	//dual read as crude debounce
+	
+	if ( SENSORS_INVERTING )
+		return !digitalRead(pin) && !digitalRead(pin);
+	else
+		return digitalRead(pin) && digitalRead(pin);
 }
 
 long to_steps(float steps_per_unit, float units)

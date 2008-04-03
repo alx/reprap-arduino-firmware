@@ -16,6 +16,13 @@
 #define FAST_XY_FEEDRATE 1000.0
 #define FAST_Z_FEEDRATE  50.0
 
+// Units in curve section
+#define CURVE_SECTION_INCHES 0.019685
+#define CURVE_SECTION_MM 0.5
+
+// Set to one if sensor outputs inverting
+#define SENSORS_INVERTING 1
+
 /****************************************************************************************
 * digital i/o pin assignment
 *

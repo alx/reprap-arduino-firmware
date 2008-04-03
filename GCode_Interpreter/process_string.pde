@@ -25,6 +25,7 @@ boolean abs_mode = false;   //0 = incremental; 1 = absolute
 float x_units = X_STEPS_PER_INCH;
 float y_units = Y_STEPS_PER_INCH;
 float z_units = Z_STEPS_PER_INCH;
+float curve_section = CURVE_SECTION_INCHES;
 
 //our direction vars
 byte x_direction = 1;
@@ -76,16 +77,13 @@ void process_string(char instruction[], int size)
 		//which one?
 		code = (int)search_string('G', instruction, size);
 		
-		//do something!		
+		// Get co-ordinates if required by the code type given
 		switch (code)
 		{
-			//Rapid Positioning
-			//Linear Interpolation
-			//these are basically the same thing.
 			case 0:
 			case 1:
-
-				//set our target.
+			case 2:
+			case 3:
 				if(abs_mode)
 				{
 					//we do it like this to save time. makes curves better.
@@ -94,27 +92,36 @@ void process_string(char instruction[], int size)
 						fp.x = search_string('X', instruction, size);
 					else
 						fp.x = current_units.x;
-					
+				
 					if (has_command('Y', instruction, size))
 						fp.y = search_string('Y', instruction, size);
 					else
 						fp.y = current_units.y;
-					
+				
 					if (has_command('Z', instruction, size))
 						fp.z = search_string('Z', instruction, size);
 					else
 						fp.z = current_units.z;
-						
-					set_target(fp.x, fp.y, fp.z);
 				}
 				else
 				{
-					fp.x = search_string('X', instruction, size);
-					fp.y = search_string('Y', instruction, size);
-					fp.z = search_string('Z', instruction, size);
-
-					set_target(current_units.x + fp.x, current_units.y + fp.y, current_units.z + fp.z);
+					fp.x = search_string('X', instruction, size) + current_units.x;
+					fp.y = search_string('Y', instruction, size) + current_units.y;
+					fp.z = search_string('Z', instruction, size) + current_units.z;
 				}
+			break;
+		}
+
+		//do something!
+		switch (code)
+		{
+			//Rapid Positioning
+			//Linear Interpolation
+			//these are basically the same thing.
+			case 0:
+			case 1:
+				//set our target.
+				set_target(fp.x, fp.y, fp.z);
 
 				//adjust if we have a specific feedrate.
 				if (code == 1)
@@ -134,6 +141,61 @@ void process_string(char instruction[], int size)
 				//finally move.
 				dda_move(feedrate_micros);
 			break;
+			
+			//Clockwise arc
+			case 2:
+			//Counterclockwise arc
+			case 3:
+				FloatPoint cent;
+
+				// Centre coordinates are always relative
+				cent.x = search_string('I', instruction, size) + current_units.x;
+				cent.y = search_string('J', instruction, size) + current_units.y;
+				float angleA, angleB, angle, radius, length, aX, aY, bX, bY;
+
+				aX = (current_units.x - cent.x);
+				aY = (current_units.y - cent.y);
+				bX = (fp.x - cent.x);
+				bY = (fp.y - cent.y);
+				
+				if (code == 2) { // Clockwise
+					angleA = atan2(bY, bX);
+					angleB = atan2(aY, aX);
+				} else { // Counterclockwise
+					angleA = atan2(aY, aX);
+					angleB = atan2(bY, bX);
+				}
+
+				// Make sure angleB is always greater than angleA
+				// and if not add 2PI so that it is (this also takes
+				// care of the special case of angleA == angleB,
+				// ie we want a complete circle)
+				if (angleB <= angleA) angleB += 2 * M_PI;
+				angle = angleB - angleA;
+
+				radius = sqrt(aX * aX + aY * aY);
+				length = radius * angle;
+				int steps, s, step;
+				steps = (int) ceil(length / curve_section);
+
+				FloatPoint newPoint;
+				for (s = 1; s <= steps; s++) {
+					step = (code == 3) ? s : steps - s; // Work backwards for CW
+					newPoint.x = cent.x + radius * cos(angleA + angle * ((float) step / steps));
+					newPoint.y = cent.y + radius * sin(angleA + angle * ((float) step / steps));
+					set_target(newPoint.x, newPoint.y, fp.z);
+
+					// Need to calculate rate for each section of curve
+					if (feedrate > 0)
+						feedrate_micros = calculate_feedrate_delay(feedrate);
+					else
+						feedrate_micros = getMaxSpeed();
+
+					// Make step
+					dda_move(feedrate_micros);
+				}
+	
+			break;
 
 			//Dwell
 			case 4:
@@ -145,15 +207,17 @@ void process_string(char instruction[], int size)
 				x_units = X_STEPS_PER_INCH;
 				y_units = Y_STEPS_PER_INCH;
 				z_units = Z_STEPS_PER_INCH;
+				curve_section = CURVE_SECTION_INCHES;
 				
 				calculate_deltas();
 			break;
 
-			//mm for Units    
+			//mm for Units
 			case 21:
 				x_units = X_STEPS_PER_MM;
 				y_units = Y_STEPS_PER_MM;
 				z_units = Z_STEPS_PER_MM;
+				curve_section = CURVE_SECTION_MM;
 				
 				calculate_deltas();
 			break;
@@ -198,12 +262,12 @@ void process_string(char instruction[], int size)
 				abs_mode = true;
 			break;
 
-			//Incremental Positioning    
+			//Incremental Positioning
 			case 91:
 				abs_mode = false;
 			break;
 
-			//Set as home    
+			//Set as home
 			case 92:
 				set_position(0.0, 0.0, 0.0);
 			break;
@@ -221,9 +285,9 @@ void process_string(char instruction[], int size)
 */
 
 			default:
-				Serial.print("huh? G"); 
-				Serial.println(code);      
-		}		
+				Serial.print("huh? G");
+				Serial.println(code,DEC);
+		}
 	}
 	
 	//find us an m code.
