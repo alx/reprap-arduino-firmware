@@ -73,11 +73,19 @@ void extruder_set_temperature(int temp)
 */
 int extruder_get_temperature()
 {
+	if (EXTRUDER_THERMISTOR_PIN > -1)
+		return extruder_read_thermistor();
+	else if (EXTRUDER_THERMOCOUPLE_PIN > -1)
+		return extruder_read_thermocouple();
+}
+
+int extruder_read_thermistor()
+{
 	int raw = analogRead(EXTRUDER_THERMISTOR_PIN);
-	
+
 	int celsius = 0;
 	byte i;
-	
+
 	for (i=1; i<NUMTEMPS; i++)
 	{
 		if (temptable[i][0] > raw)
@@ -86,7 +94,7 @@ int extruder_get_temperature()
 				(raw - temptable[i-1][0]) * 
 				(temptable[i][1] - temptable[i-1][1]) /
 				(temptable[i][0] - temptable[i-1][0]);
-			
+
 			if (celsius > 255)
 				celsius = 255; 
 
@@ -97,8 +105,13 @@ int extruder_get_temperature()
 	// Overflow: We just clamp to 0 degrees celsius
 	if (i == NUMTEMPS)
 		celsius = 0;
-		
+
 	return celsius;
+}
+
+int extruder_read_thermocouple()
+{
+	return ( 5.0 * analogRead(EXTRUDER_THERMOCOUPLE_PIN) * 100.0) / 1024.0;
 }
 
 /*!

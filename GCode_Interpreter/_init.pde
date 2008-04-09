@@ -50,8 +50,9 @@
 #define Z_ENABLE_PIN 15
 
 //extruder pins
-#define EXTRUDER_MOTOR_SPEED_PIN  11
-#define EXTRUDER_MOTOR_DIR_PIN    12
-#define EXTRUDER_HEATER_PIN       6
-#define EXTRUDER_FAN_PIN          5
-#define EXTRUDER_THERMISTOR_PIN   0
+#define EXTRUDER_MOTOR_SPEED_PIN   11
+#define EXTRUDER_MOTOR_DIR_PIN     12
+#define EXTRUDER_HEATER_PIN        6
+#define EXTRUDER_FAN_PIN           5
+#define EXTRUDER_THERMISTOR_PIN    0  //a -1 disables thermistor readings
+#define EXTRUDER_THERMOCOUPLE_PIN  -1 //a -1 disables thermocouple readings
