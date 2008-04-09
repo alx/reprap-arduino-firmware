@@ -79,9 +79,12 @@ int extruder_get_temperature()
 		return extruder_read_thermocouple();
 }
 
+/*
+* This function gives us the temperature from the thermistor in Celsius
+*/
 int extruder_read_thermistor()
 {
-	int raw = analogRead(EXTRUDER_THERMISTOR_PIN);
+	int raw = extruder_sample_temperature(EXTRUDER_THERMISTOR_PIN);
 
 	int celsius = 0;
 	byte i;
@@ -109,9 +112,30 @@ int extruder_read_thermistor()
 	return celsius;
 }
 
+/*
+* This function gives us the temperature from the thermocouple in Celsius
+*/
 int extruder_read_thermocouple()
 {
-	return ( 5.0 * analogRead(EXTRUDER_THERMOCOUPLE_PIN) * 100.0) / 1024.0;
+	return ( 5.0 * extruder_sample_temperature(EXTRUDER_THERMOCOUPLE_PIN) * 100.0) / 1024.0;
+}
+
+/*
+* This function gives us an averaged sample of the analog temperature pin.
+*/
+int extruder_sample_temperature(byte pin)
+{
+	int raw = 0;
+	
+	//read in a certain number of samples
+	for (byte i=0; i<TEMPERATURE_SAMPLES; i++)
+		raw += analogRead(pin);
+		
+	//average the samples
+	raw = raw/TEMPERATURE_SAMPLES;
+
+	//send it back.
+	return raw;
 }
 
 /*!

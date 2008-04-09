@@ -24,6 +24,9 @@
 // RepRap opto endstops are *not* inverting.
 #define SENSORS_INVERTING 0
 
+// How many temperature samples to take.  each sample takes about 100 usecs.
+#define TEMPERATURE_SAMPLES 5
+
 /****************************************************************************************
 * digital i/o pin assignment
 *
