@@ -14,6 +14,7 @@
 	* (0.1) Created intial library by Zach Smith.
     * (0.2) Optimized library for better performance by Zach Smith.
 	* (0.3) Rewrote and refactored all code.  Fixed major interrupt bug by Zach Smith.
+    * (0.4) Changed timer/speed setting to properly emulate PICs.
 
 	License: GPL v2.0
 */
