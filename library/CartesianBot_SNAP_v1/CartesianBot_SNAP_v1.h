@@ -14,7 +14,7 @@
 	* (0.1) Created intial library by Zach Smith.
     * (0.2) Optimized library for better performance by Zach Smith.
 	* (0.3) Rewrote and refactored all code.  Fixed major interrupt bug by Zach Smith.
-    * (0.4) Changed timer/speed setting to properly emulate PICs.
+    * (0.4) Changed timer/speed setting to properly emulate PICs. Also fixed forward/reverse commands by Zach Smith.
 
 	License: GPL v2.0
 */
@@ -39,6 +39,7 @@ void interruptSeek();
 void interruptHomeReset();
 void interruptFindMin();
 void interruptFindMax();
+void interruptRun();
 
 //notification functions to let the host know whats up.
 void notifyHomeReset(byte to, byte from);
@@ -91,6 +92,7 @@ extern CartesianBot bot;
 #define MODE_HOMERESET 3
 #define MODE_FIND_MIN 4
 #define MODE_FIND_MAX 5
+#define MODE_RUN 6
 
 // sync mode declarations
 #define sync_none 0

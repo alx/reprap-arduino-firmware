@@ -31,6 +31,8 @@ SIGNAL(SIG_OUTPUT_COMPARE1A)
 		interruptFindMin();
 	else if (bot_mode == MODE_FIND_MAX)
 		interruptFindMax();
+	else if (bot_mode == MODE_RUN)
+		interruptRun();
 	else
 	{
 		bot.mode = MODE_PAUSE;
@@ -116,6 +118,17 @@ void interruptFindMax()
 	}
 }
 
+void interruptRun()
+{
+	if (x_mode == MODE_RUN && bot.x.can_step)
+		bot.x.stepper.pulse();
+
+	if (y_mode == MODE_RUN && bot.y.can_step)
+		bot.y.stepper.pulse();
+
+	if (z_mode == MODE_RUN && bot.z.can_step)
+		bot.z.stepper.pulse();
+}
 
 void setup_cartesian_bot_snap_v1()
 {
@@ -346,51 +359,48 @@ void process_cartesian_bot_snap_commands_v1()
 		break;
 
 		case CMD_FORWARD:
-			/*
 			//okay, set our speed.
 			if (dest == X_ADDRESS)
 			{
 				bot.x.stepper.setDirection(RS_FORWARD);
-				x_mode = func_forward;
+				x_mode = MODE_RUN;
 			}
 			else if (dest == Y_ADDRESS)
 			{
 				bot.y.stepper.setDirection(RS_FORWARD);
-				y_mode = func_forward;
+				y_mode = MODE_RUN;
 			}
 			else if (dest == Z_ADDRESS)
 			{
 				bot.z.stepper.setDirection(RS_FORWARD);
-				z_mode = func_forward;
+				z_mode = MODE_RUN;
 			}
+			bot_mode = MODE_RUN;
 
 			//emulate PIC timer
 			bot.setTimer((256 - snap.getByte(1)) * 4096);
-			*/
 		break;
 
 		case CMD_REVERSE:
-			/*
 			if (dest == X_ADDRESS)
 			{
 				bot.x.stepper.setDirection(RS_REVERSE);
-				x_mode = func_reverse;
+				x_mode = MODE_RUN;
 			}
 			else if (dest == Y_ADDRESS)
 			{
 				bot.y.stepper.setDirection(RS_REVERSE);
-				y_mode = func_reverse;
+				y_mode = MODE_RUN;
 			}
 			else if (dest == Z_ADDRESS)
 			{
 				bot.z.stepper.setDirection(RS_REVERSE);
-				z_mode = func_reverse;
+				z_mode = MODE_RUN;
 			}
+			bot_mode = MODE_RUN;
 
 			//emulate PIC timer
 			bot.setTimer((256 - snap.getByte(1)) * 4096);
-
-			*/
 		break;
 
 		case CMD_SETPOS:
