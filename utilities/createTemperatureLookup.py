@@ -98,9 +98,8 @@ def main(argv):
 #	adcs = [1, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 110, 130, 150, 190, 220,  250, 300]
 	first = 1
 
-	print "// thermistor lookup table"
-	print "// made with createTemperatureLookup.py"
-	print "// located at: http://svn.reprap.org/trunk/reprap/firmware/Arduino/utilities/createTemperatureLookup.py"
+	print "// Thermistor lookup table for RepRap Temperature Sensor Boards (http://make.rrrf.org/ts)"
+	print "// Made with createTemperatureLookup.py (http://svn.reprap.org/trunk/reprap/firmware/Arduino/utilities/createTemperatureLookup.py)"
 	print "// ./createTemperatureLookup.py --r0=%s --t0=%s --r1=%s --r2=%s --beta=%s --max-adc=%s" % (r0, t0, r1, r2, beta, max_adc)
 	print "// r0: %s" % (r0)
 	print "// t0: %s" % (t0)
