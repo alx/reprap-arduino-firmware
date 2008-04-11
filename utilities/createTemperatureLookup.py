@@ -100,23 +100,24 @@ def main(argv):
 
 	print "// thermistor lookup table"
 	print "// made with createTemperatureLookup.py"
-	print "// r0: ", r0
-	print "// t0: ", t0
-	print "// r1: ", r1
-	print "// r2: ", r2
-	print "// beta: ", beta
-	print "// max adc: ", max_adc
-	print;
-	print "#define NUMTEMPS ", len(adcs)
+	print "// located at: http://svn.reprap.org/trunk/reprap/firmware/Arduino/utilities/createTemperatureLookup.py"
+	print "// ./createTemperatureLookup.py --r0=%s --t0=%s --r1=%s --r2=%s --beta=%s --max-adc=%s" % (r0, t0, r1, r2, beta, max_adc)
+	print "// r0: %s" % (r0)
+	print "// t0: %s" % (t0)
+	print "// r1: %s" % (r1)
+	print "// r2: %s" % (r2)
+	print "// beta: %s" % (beta)
+	print "// max adc: %s" % (max_adc)
+	print "#define NUMTEMPS %s" % (len(adcs))
 	print "short temptable[NUMTEMPS][2] = {"
-	print "// { adc ,  temp }"    
+
+	counter = 0
 	for adc in adcs:
-		if first==1:
-			first = 0
+		counter = counter +1
+		if counter == len(adcs):
+			print "   {%s, %s}" % (adc, int(t.temp(adc)))
 		else:
-			print ","
-		print "   {", adc, ", ", int(t.temp(adc)), "}",
-	print
+			print "   {%s, %s}," % (adc, int(t.temp(adc)))
 	print "};"
 	
 def usage():
