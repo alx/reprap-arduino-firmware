@@ -27,6 +27,12 @@
 // How many temperature samples to take.  each sample takes about 100 usecs.
 #define TEMPERATURE_SAMPLES 5
 
+//these defines are for using rotary encoders on the extruder
+//#define EXTRUDER_ENCODER_ENABLED    //uncomment this to enable quadrature encoding - EXPERIMENTAL!
+#define EXTRUDER_ENCODER_STEPS 512  //number of steps per revolution
+#define EXTRUDER_ENCODER_A_PIN 2    //quadrature a pin
+#define EXTRUDER_ENCODER_B_PIN 3    //quadrature b pin
+
 /****************************************************************************************
 * digital i/o pin assignment
 *

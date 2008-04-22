@@ -1,12 +1,6 @@
-//these routines provide an easy interface for controlling timer1 interrupts
+#ifdef EXTRUDER_ENCODER_ENABLED
 
-//to use, enable the code below:
-/*
-SIGNAL(SIG_OUTPUT_COMPARE1A)
-{
-  //your interrupt code here.
-}
-*/
+//these routines provide an easy interface for controlling timer1 interrupts
 
 void enableTimer1Interrupt()
 {
@@ -165,3 +159,5 @@ void setupTimer1Interrupt()
 	setTimer1Resolution(4);
 	setTimer1Ceiling(65535);
 }
+
+#endif

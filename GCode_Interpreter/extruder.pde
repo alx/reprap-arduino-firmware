@@ -29,6 +29,9 @@ short temptable[NUMTEMPS][2] = {
 // End of temperature lookup table
 //
 
+#define EXTRUDER_FORWARD true
+#define EXTRUDER_REVERSE false
+
 //these our the default values for the extruder.
 int extruder_speed = 128;
 int extruder_target_celsius = 0;
@@ -36,18 +39,69 @@ int extruder_max_celsius = 0;
 byte extruder_heater_low = 64;
 byte extruder_heater_high = 255;
 
+//this is for doing encoder based extruder control
+int extruder_rpm = 0;
+long extruder_delay = 0;
+int extruder_error = 0;
+bool extruder_direction = EXTRUDER_FORWARD;
+
+#ifdef EXTRUDER_ENCODER_ENABLED	
+	void extruder_read_quadrature()
+	{
+		// found a low-to-high on channel A
+		if (digitalRead(EXTRUDER_ENCODER_A_PIN) == HIGH)
+		{   
+			// check channel B to see which way
+			if (digitalRead(EXTRUDER_ENCODER_B_PIN) == LOW)
+				extruder_error--; // CCW
+			else
+				extruder_error++; //CW
+		}
+		// found a high-to-low on channel A
+		else
+		{
+			// check channel B to see which way
+			if (digitalRead(EXTRUDER_ENCODER_B_PIN) == LOW)
+				extruder_error++; //CW
+			else
+				extruder_error--; //CCW
+		}
+	}
+#endif
+
 void init_extruder()
 {
 	//default to room temp.
 	extruder_set_temperature(21);
 	
+	//setup our 
 	pinMode(EXTRUDER_MOTOR_DIR_PIN, OUTPUT);
 	pinMode(EXTRUDER_MOTOR_SPEED_PIN, OUTPUT);
 	pinMode(EXTRUDER_HEATER_PIN, OUTPUT);
+	pinMode(EXTRUDER_FAN_PIN, OUTPUT);
+	
+#ifdef EXTRUDER_ENCODER_ENABLED	
+	//setup our encoder interrupt stuff.
+	//these pins are inputs
+	pinMode(EXTRUDER_ENCODER_A_PIN, INPUT);
+	pinMode(EXTRUDER_ENCODER_B_PIN, INPUT);
+
+	//turn on internal pullups
+	digitalWrite(EXTRUDER_ENCODER_A_PIN, HIGH);
+	digitalWrite(EXTRUDER_ENCODER_A_PIN, HIGH);
+	
+	//attach our interrupt handler
+	attachInterrupt(0, extruder_read_quadrature, CHANGE);
+
+	//setup our timer interrupt stuff
+	setupTimer1Interrupt();
+#endif
+
 }
 
-void extruder_set_direction(byte direction)
+void extruder_set_direction(bool direction)
 {
+	extruder_direction = direction;
 	digitalWrite(EXTRUDER_MOTOR_DIR_PIN, direction);
 }
 
@@ -158,3 +212,34 @@ void extruder_manage_temperature()
 	else
 		analogWrite(EXTRUDER_HEATER_PIN, 0);
 }
+
+#ifdef EXTRUDER_ENCODER_ENABLED
+	//this handles the timer interrupt code
+	SIGNAL(SIG_OUTPUT_COMPARE1A)
+	{
+		//increment/decrement our error variable.
+		//the manage extruder function will handle the motor control
+		if (extruder_direction)
+			extruder_error--;
+		else
+			extruder_error++;
+	}
+
+	void extruder_manage_speed()
+	{
+		//calculate our speed.
+		int speed = abs(extruder_error) / 4;
+		speed = max(speed, 1);
+		speed = min(speed, 255);
+
+		//figure out which direction to move the motor
+		if (extruder_error > 0)
+			digitalWrite(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_FORWARD);
+		else if (extruder_error < 0)
+			digitalWrite(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_REVERSE);
+
+		//send us off at that speed!
+		if (extruder_error != 0)
+			analogWrite(EXTRUDER_MOTOR_SPEED_PIN, speed);
+	}
+#endif
