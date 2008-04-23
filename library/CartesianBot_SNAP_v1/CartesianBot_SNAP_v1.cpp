@@ -40,6 +40,11 @@ SIGNAL(SIG_OUTPUT_COMPARE1A)
 	}
 }
 
+unsigned long picTimerSimulate(unsigned char fromSnap)
+{
+	return (256 - fromSnap) * 4096; 
+}
+
 void interruptDDA()
 {
 	if (bot.x.can_step)
@@ -378,7 +383,7 @@ void process_cartesian_bot_snap_commands_v1()
 			bot_mode = MODE_RUN;
 
 			//emulate PIC timer
-			bot.setTimer((256 - snap.getByte(1)) * 4096);
+			bot.setTimer(picTimerSimulate(snap.getByte(1)));
 		break;
 
 		case CMD_REVERSE:
@@ -400,7 +405,7 @@ void process_cartesian_bot_snap_commands_v1()
 			bot_mode = MODE_RUN;
 
 			//emulate PIC timer
-			bot.setTimer((256 - snap.getByte(1)) * 4096);
+			bot.setTimer(picTimerSimulate(snap.getByte(1)));
 		break;
 
 		case CMD_SETPOS:
@@ -459,7 +464,7 @@ void process_cartesian_bot_snap_commands_v1()
 			}
 
 			//emulate the PIC timer speeds
-			bot.setTimer((256 - snap.getByte(1)) * 4096);
+			bot.setTimer(picTimerSimulate(snap.getByte(1)));
 
 			//get everything current.
 			bot.readState();
@@ -516,7 +521,7 @@ void process_cartesian_bot_snap_commands_v1()
 				z_mode = MODE_FIND_MIN;
 			
 			//emulate PIC speeds
-			bot.setTimer((256 - snap.getByte(1)) * 4096);
+			bot.setTimer(picTimerSimulate(snap.getByte(1)));
 			
 			//start our calibration.
 			bot_mode = MODE_FIND_MIN;		
@@ -576,7 +581,7 @@ void process_cartesian_bot_snap_commands_v1()
 			bot.z.setTarget(bot.z.current);
 			
 			//set our speed.
-			bot.setTimer((256 - snap.getByte(1)) * 4096);
+			bot.setTimer(picTimerSimulate(snap.getByte(1)));
 			
 			//init our DDA stuff!
 			bot.calculateDDA();
@@ -648,7 +653,7 @@ void process_cartesian_bot_snap_commands_v1()
 			}
 
 			//emulate PIC timer stuff
-			bot.setTimer((256 - snap.getByte(1)) * 4096);
+			bot.setTimer(picTimerSimulate(snap.getByte(1)));
 
 			//starts our home reset mode.
 			bot_mode = MODE_HOMERESET;
