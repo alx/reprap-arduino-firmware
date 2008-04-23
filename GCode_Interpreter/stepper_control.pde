@@ -1,3 +1,4 @@
+
 //init our variables
 long max_delta;
 long x_counter;

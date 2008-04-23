@@ -200,6 +200,45 @@ int extruder_sample_temperature(byte pin)
 	return raw;
 }
 
+#ifdef EXTRUDER_ENCODER_ENABLED
+	//this handles the timer interrupt code
+	SIGNAL(SIG_OUTPUT_COMPARE1A)
+	{
+		//increment/decrement our error variable.
+		//the manage extruder function will handle the motor control
+		if (extruder_direction)
+			extruder_error--;
+		else
+			extruder_error++;
+	}
+
+	void extruder_manage_speed()
+	{
+		//calculate our speed.
+		int speed = abs(extruder_error) / 4;
+		speed = max(speed, EXTRUDER_MIN_SPEED);
+		speed = min(speed, 255);
+
+            Serial.print("e:");
+            Serial.print(extruder_error, DEC);
+            Serial.print(" s:");
+            Serial.println(speed);
+
+		//figure out which direction to move the motor
+		if (extruder_error > 0)
+			digitalWrite(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_REVERSE);
+		else if (extruder_error < 0)
+			digitalWrite(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_FORWARD);
+
+		//send us off at that speed!
+		if (abs(extruder_error) > 2)
+			analogWrite(EXTRUDER_MOTOR_SPEED_PIN, speed);
+                else
+                  analogWrite(EXTRUDER_MOTOR_SPEED_PIN, 0);
+	}
+#endif
+
+
 /*!
   Manages motor and heater based on measured temperature:
   o If temp is too low, don't start the motor
@@ -219,35 +258,9 @@ void extruder_manage_temperature()
 	//turn the heater off if we're above our max.
 	else
 		analogWrite(EXTRUDER_HEATER_PIN, 0);
+
+  #ifdef EXTRUDER_ENCODER_ENABLED
+    extruder_manage_speed();
+  #endif
 }
 
-#ifdef EXTRUDER_ENCODER_ENABLED
-	//this handles the timer interrupt code
-	SIGNAL(SIG_OUTPUT_COMPARE1A)
-	{
-		//increment/decrement our error variable.
-		//the manage extruder function will handle the motor control
-		if (extruder_direction)
-			extruder_error--;
-		else
-			extruder_error++;
-	}
-
-	void extruder_manage_speed()
-	{
-		//calculate our speed.
-		int speed = abs(extruder_error) / 4;
-		speed = max(speed, 1);
-		speed = min(speed, 255);
-
-		//figure out which direction to move the motor
-		if (extruder_error > 0)
-			digitalWrite(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_FORWARD);
-		else if (extruder_error < 0)
-			digitalWrite(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_REVERSE);
-
-		//send us off at that speed!
-		if (extruder_error != 0)
-			analogWrite(EXTRUDER_MOTOR_SPEED_PIN, speed);
-	}
-#endif
