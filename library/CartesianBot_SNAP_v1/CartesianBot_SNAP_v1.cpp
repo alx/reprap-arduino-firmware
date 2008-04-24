@@ -40,10 +40,7 @@ SIGNAL(SIG_OUTPUT_COMPARE1A)
 	}
 }
 
-unsigned long picTimerSimulate(unsigned char fromSnap)
-{
-	return (256 - fromSnap) * 4096; 
-}
+
 
 void interruptDDA()
 {

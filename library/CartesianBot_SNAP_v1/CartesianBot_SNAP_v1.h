@@ -100,4 +100,11 @@ extern CartesianBot bot;
 #define sync_inc  2
 #define sync_dec  3
 
+// Making this inline saves about 30 bytes (AB)...
+
+inline unsigned long picTimerSimulate(unsigned char fromSnap)
+{
+	return (256 - fromSnap) * 4096UL; 
+}
+
 #endif
