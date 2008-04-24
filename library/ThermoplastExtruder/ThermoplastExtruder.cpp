@@ -1,36 +1,10 @@
 #include "WConstants.h"
 #include "ThermoplastExtruder.h"
 
-//
-// Start of temperature lookup table
-//
-#define NUMTEMPS  20
-short temptable[NUMTEMPS][2] = {
-// { adc ,  temp }
-   { 1 ,  929 } ,
-   { 54 ,  266 } ,
-   { 107 ,  217 } ,
-   { 160 ,  190 } ,
-   { 213 ,  172 } ,
-   { 266 ,  158 } ,
-   { 319 ,  146 } ,
-   { 372 ,  136 } ,
-   { 425 ,  127 } ,
-   { 478 ,  119 } ,
-   { 531 ,  111 } ,
-   { 584 ,  103 } ,
-   { 637 ,  96 } ,
-   { 690 ,  88 } ,
-   { 743 ,  80 } ,
-   { 796 ,  71 } ,
-   { 849 ,  62 } ,
-   { 902 ,  50 } ,
-   { 955 ,  34 } ,
-   { 1008 ,  2 }
-};
-//
-// End of temperature lookup table
-//
+// Pick up the thermistor table from the file - makes it easier to customise
+// the code for different thermistors.
+
+#include "ThermistorTable.h"
 
 /*!
 	motor_dir_pin must be a digital output.
