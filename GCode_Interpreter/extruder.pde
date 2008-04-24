@@ -51,6 +51,8 @@ byte extruder_heater_high = 255;
 int extruder_rpm = 0;
 long extruder_delay = 0;
 int extruder_error = 0;
+int last_extruder_error = 0;
+int extruder_error_delta = 0;
 bool extruder_direction = EXTRUDER_FORWARD;
 
 #ifdef EXTRUDER_ENCODER_ENABLED	
@@ -214,15 +216,22 @@ int extruder_sample_temperature(byte pin)
 
 	void extruder_manage_speed()
 	{
+		//is our speed changing?
+		extruder_error_delta = last_extruder_error - extruder_error;
+		
 		//calculate our speed.
 		int speed = abs(extruder_error) / 4;
+		speed += extruder_error_delta;
+		
+		//do some bounds checking.
 		speed = max(speed, EXTRUDER_MIN_SPEED);
-		speed = min(speed, 255);
+		speed = min(speed, EXTRUDER_MAX_SPEED);
 
-            Serial.print("e:");
-            Serial.print(extruder_error, DEC);
-            Serial.print(" s:");
-            Serial.println(speed);
+		//temporary debug stuff.
+		Serial.print("e:");
+		Serial.print(extruder_error, DEC);
+		Serial.print(" s:");
+		Serial.println(speed);
 
 		//figure out which direction to move the motor
 		if (extruder_error > 0)
@@ -231,10 +240,13 @@ int extruder_sample_temperature(byte pin)
 			digitalWrite(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_FORWARD);
 
 		//send us off at that speed!
-		if (abs(extruder_error) > 2)
+		if (abs(extruder_error) > EXTRUDER_ERROR_MARGIN)
 			analogWrite(EXTRUDER_MOTOR_SPEED_PIN, speed);
-                else
-                  analogWrite(EXTRUDER_MOTOR_SPEED_PIN, 0);
+		else
+			analogWrite(EXTRUDER_MOTOR_SPEED_PIN, 0);
+			
+		//save our last error.
+		last_extruder_error = extruder_error;
 	}
 #endif
 
@@ -259,8 +271,8 @@ void extruder_manage_temperature()
 	else
 		analogWrite(EXTRUDER_HEATER_PIN, 0);
 
-  #ifdef EXTRUDER_ENCODER_ENABLED
-    extruder_manage_speed();
-  #endif
+	#ifdef EXTRUDER_ENCODER_ENABLED
+		extruder_manage_speed();
+	#endif
 }
 

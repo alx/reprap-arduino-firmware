@@ -32,7 +32,9 @@
 #define EXTRUDER_ENCODER_STEPS 512  //number of steps per revolution
 #define EXTRUDER_ENCODER_A_PIN 2    //quadrature a pin
 #define EXTRUDER_ENCODER_B_PIN 3    //quadrature b pin
-#define EXTRUDER_MIN_SPEED 50
+#define EXTRUDER_MIN_SPEED 50		//minimum PWM speed to use
+#define EXTRUDER_MAX_SPEED 255      //maximum PWM speed to use
+#define EXTRUDER_ERROR_MARGIN 2     //our error margin (to prevent constant seeking)
 
 /****************************************************************************************
 * digital i/o pin assignment
