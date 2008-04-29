@@ -41,6 +41,10 @@ void init_process_string()
 	serial_count = 0;
 }
 
+//our feedrate variables.
+float feedrate = 0.0;
+long feedrate_micros = 0;
+
 //Read the string and execute instructions
 void process_string(char instruction[], int size)
 {
@@ -57,8 +61,6 @@ void process_string(char instruction[], int size)
 	fp.y = 0.0;
 	fp.z = 0.0;
 
-	float feedrate = 0.0;
-	long feedrate_micros = 0;
 	byte code = 0;;
 	
 //what line are we at?
@@ -72,7 +74,12 @@ void process_string(char instruction[], int size)
 	Serial.println(instruction);
 */		
 	//did we get a gcode?
-	if (has_command('G', instruction, size))
+	if (
+		has_command('G', instruction, size) ||
+		has_command('X', instruction, size) ||
+		has_command('Y', instruction, size) ||
+		has_command('Z', instruction, size)
+	)
 	{
 		//which one?
 		code = (int)search_string('G', instruction, size);
@@ -123,20 +130,34 @@ void process_string(char instruction[], int size)
 				//set our target.
 				set_target(fp.x, fp.y, fp.z);
 
-				//adjust if we have a specific feedrate.
-				if (code == 1)
+				//do we have a set speed?
+				if (has_command('G', instruction, size))
 				{
-					//how fast do we move?
-					feedrate = search_string('F', instruction, size);
+					//adjust if we have a specific feedrate.
+					if (code == 1)
+					{
+						//how fast do we move?
+						feedrate = search_string('F', instruction, size);
+						if (feedrate > 0)
+							feedrate_micros = calculate_feedrate_delay(feedrate);
+						//nope, no feedrate
+						else
+							feedrate_micros = getMaxSpeed();
+					}
+					//use our max for normal moves.
+					else
+						feedrate_micros = getMaxSpeed();
+				}
+				//nope, just coordinates!
+				else
+				{
+					//do we have a feedrate yet?
 					if (feedrate > 0)
 						feedrate_micros = calculate_feedrate_delay(feedrate);
 					//nope, no feedrate
 					else
 						feedrate_micros = getMaxSpeed();
 				}
-				//use our max for normal moves.
-				else
-					feedrate_micros = getMaxSpeed();
 
 				//finally move.
 				dda_move(feedrate_micros);
