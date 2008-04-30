@@ -36,9 +36,13 @@ bool LinearAxis::atMin()
 	return digitalRead(this->min_pin);
 }
 
+/*
+ * NB!!!  Turned off by Adrian to free up pins
+*/
 bool LinearAxis::atMax()
 {
-	return digitalRead(this->max_pin);
+	return 0;
+	//return digitalRead(this->max_pin);
 }
 
 void LinearAxis::doStep()

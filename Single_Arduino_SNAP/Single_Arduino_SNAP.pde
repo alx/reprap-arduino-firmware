@@ -38,6 +38,8 @@
 #define EXTRUDER_HEATER_PIN       6
 #define EXTRUDER_FAN_PIN          5
 #define EXTRUDER_THERMISTOR_PIN   0
+#define VALVE_DIR_PIN             15
+#define VALVE_ENABLE_PIN          16  //NB: Conflicts with Max Z!!!!
 
 // how many steps do our motors have?
 #define X_MOTOR_STEPS 400
@@ -54,7 +56,8 @@
 #include <ThermoplastExtruder_SNAP_v1.h>
 #include <CartesianBot_SNAP_v1.h>
 
-ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, EXTRUDER_FAN_PIN, EXTRUDER_THERMISTOR_PIN);
+ThermoplastExtruder extruder(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_MOTOR_SPEED_PIN, EXTRUDER_HEATER_PIN, 
+  EXTRUDER_FAN_PIN, EXTRUDER_THERMISTOR_PIN, VALVE_DIR_PIN, VALVE_ENABLE_PIN);
 
 CartesianBot bot = CartesianBot(
 	'x', X_MOTOR_STEPS, X_DIR_PIN, X_STEP_PIN, X_MIN_PIN, X_MAX_PIN, X_ENABLE_PIN,

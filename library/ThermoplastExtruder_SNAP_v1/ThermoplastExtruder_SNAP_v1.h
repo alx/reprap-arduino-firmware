@@ -71,6 +71,8 @@ int calculatePicTempForCelsius(int temperature);
 #define CMD_SETHEAT       9
 #define CMD_GETTEMP       10
 #define CMD_SETCOOLER     11
+#define CMD_VALVEOPEN  	  12
+#define CMD_VALVECLOSE    13
 #define CMD_PWMPERIOD     50
 #define CMD_PRESCALER     51 //apparently doesnt exist...
 #define CMD_SETVREF       52

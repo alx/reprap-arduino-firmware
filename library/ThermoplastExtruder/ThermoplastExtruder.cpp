@@ -11,10 +11,14 @@
 	motor_pwm_pin and heater_pin must be PWM capable outputs.
 	thermistor_pin must be an analog input.
 */
-ThermoplastExtruder::ThermoplastExtruder(byte motor_dir_pin, byte motor_pwm_pin, byte heater_pin, byte cooler_pin, byte thermistor_pin)
+ThermoplastExtruder::ThermoplastExtruder(byte motor_dir_pin, byte motor_pwm_pin, 
+	byte heater_pin, byte cooler_pin, byte thermistor_pin, byte valve_dir_pin, 
+	byte valve_enable_pin)
 {
 	this->motor_dir_pin = motor_dir_pin;
 	this->motor_pwm_pin = motor_pwm_pin;
+	this->valve_dir_pin = valve_dir_pin;
+	this->valve_enable_pin = valve_enable_pin;	
 	this->heater_pin = heater_pin;
 	this->cooler_pin = cooler_pin;
 	this->thermistor_pin = thermistor_pin;
@@ -22,6 +26,8 @@ ThermoplastExtruder::ThermoplastExtruder(byte motor_dir_pin, byte motor_pwm_pin,
 	pinMode(this->motor_dir_pin, OUTPUT);
 	pinMode(this->motor_pwm_pin, OUTPUT);
 	pinMode(this->heater_pin, OUTPUT);
+	pinMode(this->valve_dir_pin, OUTPUT);
+	pinMode(this->valve_enable_pin, OUTPUT);
 
 	this->getTemperature();
 	this->setSpeed(0);
@@ -56,6 +62,17 @@ void ThermoplastExtruder::setDirection(bool dir)
 {
 	this->motor_dir = dir;
 	digitalWrite(this->motor_dir_pin, this->motor_dir);
+}
+
+/*!
+  Pulse the valve to open or close it.  dir == true: open; dir == false: closed
+*/
+void ThermoplastExtruder::setValve(bool dir, byte pulse_time)
+{
+	digitalWrite(this->valve_dir_pin, dir);
+	digitalWrite(this->valve_enable_pin, 1);
+	delay(2*(int)pulse_time);
+	digitalWrite(this->valve_enable_pin, 0);
 }
 
 void ThermoplastExtruder::setTemperature(int temp)

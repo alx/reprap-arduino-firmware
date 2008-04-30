@@ -26,7 +26,9 @@
 class ThermoplastExtruder
 {
 	public:
-		ThermoplastExtruder(byte motor_dir_pin, byte motor_pwm_pin, byte heater_pin, byte cooler_pin, byte thermistor_pin);
+		ThermoplastExtruder(byte motor_dir_pin, byte motor_pwm_pin, byte heater_pin, 
+		byte cooler_pin, byte thermistor_pin, byte valve_dir_pin, 
+		byte valve_enable_pin);
 
 		// various setters methods:
 		void setSpeed(byte speed);
@@ -38,6 +40,9 @@ class ThermoplastExtruder
 		int getTemperature();
 		int calculateTemperatureFromRaw(int raw);
 		void manageTemperature();
+		
+		// Open and close the valve
+		void setValve(bool dir, byte pulse_time);
 
 		//variables for easy access.
 		byte heater_low;		// Low heater, for when we're at our temp, 0-255
@@ -50,6 +55,8 @@ class ThermoplastExtruder
 		//pin numbers:
 		byte motor_pwm_pin;		// motor PWM pin
 		byte motor_dir_pin;		// motor direction pin
+		byte valve_enable_pin;	// valve enable pin
+		byte valve_dir_pin;		// valve direction pin		
 		byte heater_pin;		// heater PWM pin
 		byte thermistor_pin;	// thermistor analog input pin
 		byte cooler_pin;		// cooler fan PWM pin

@@ -45,6 +45,16 @@ void process_thermoplast_extruder_snap_commands_v1()
 			extruder.setDirection(0);
 			extruder.setSpeed(snap.getByte(1));
 		break;
+		
+		// Open the valve
+		case CMD_VALVEOPEN:
+			extruder.setValve(1, snap.getByte(1));
+		break;
+		
+		// Close the valve
+		case CMD_VALVECLOSE:
+			extruder.setValve(0, snap.getByte(1));
+		break;		
 
 		// dunno what this is supposed to do...
 		case CMD_SETPOS:
