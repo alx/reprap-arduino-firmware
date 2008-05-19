@@ -61,8 +61,8 @@ CartesianBot bot(
 Point p;
 
 int max_speed = 100;
-int max_x = 2500;
-int max_y = 2500;
+int max_x = 800;
+int max_y = 800;
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)
 {
@@ -84,7 +84,14 @@ void setup()
 	Serial.println("Starting 3 axis DDA exerciser.");
 
 	bot.x.stepper.setRPM(max_speed);
+	bot.y.stepper.setRPM(max_speed);
+	bot.z.stepper.setRPM(max_speed);
+	
 	bot.setTimer(bot.x.stepper.step_delay);
+	
+	bot.x.setMax(max_x);
+	bot.y.setMax(max_y);
+	bot.z.setMax(0);
 	
 	Serial.print("RPM: ");
 	Serial.println((int)bot.x.stepper.rpm);

@@ -39,6 +39,7 @@ class LinearAxis {
 	//various position things.
 	void setPosition(long position);
 	void setTarget(long t);
+	void setMax(long v);
 	void forward1();
 	void reverse1();
 	

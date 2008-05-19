@@ -18,7 +18,7 @@ LinearAxis::LinearAxis(char id, int steps, byte dir_pin, byte step_pin, byte min
 void LinearAxis::readState()
 {
 	//stop us if we're on target
-	if (this->target == this->current)
+	if (this->atTarget())
 		this->can_step = false;
 	//stop us if we're at home and still going 
 	else if (this->atMin() && (this->stepper.direction == RS_REVERSE))
@@ -33,16 +33,12 @@ void LinearAxis::readState()
 
 bool LinearAxis::atMin()
 {
-	return digitalRead(this->min_pin);
+	return this->current <= 0;
 }
 
-/*
- * NB!!!  Turned off by Adrian to free up pins
-*/
 bool LinearAxis::atMax()
 {
-	return 0;
-	//return digitalRead(this->max_pin);
+	return this->current >= this->max;
 }
 
 /*
@@ -51,21 +47,21 @@ bool LinearAxis::atMax()
 bool LinearAxis::atTarget()
 {
 	if (this->stepper.direction == RS_FORWARD)
-		return this->current >= this->target;
+		return this->current >= this->target || this->atMax();
 	else
-		return this->current <= this->target;
+		return this->current <= this->target || this->atMin();
 }
 
 void LinearAxis::doStep()
 {
-	//gotta call readState() before you can step again!
-	//this->can_step = false;
-	
-	//record our step
-	if (this->stepper.direction == RS_FORWARD)
-		this->forward1();
-	else
-		this->reverse1();
+	this->readState();
+	if (this->can_step)
+	{
+		if (this->stepper.direction == RS_FORWARD)
+			this->forward1();
+		else
+			this->reverse1();
+	}
 }
 
 void LinearAxis::forward1()
@@ -77,7 +73,7 @@ void LinearAxis::forward1()
 }
 
 void LinearAxis::reverse1()
-{
+{	
 	stepper.setDirection(RS_REVERSE);
 	stepper.pulse();
 	
@@ -102,6 +98,11 @@ void LinearAxis::setTarget(long t)
 		stepper.setDirection(RS_REVERSE);
 		
 	this->delta = abs(this->target - this->current);
+}
+
+void LinearAxis::setMax(long v)
+{
+	this->max = v;
 }
 
 void LinearAxis::initDDA(long max_delta)
