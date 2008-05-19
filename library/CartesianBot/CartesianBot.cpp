@@ -119,7 +119,7 @@ void CartesianBot::readState()
 
 bool CartesianBot::atTarget()
 {
-	return ((x.current == x.target) && (y.current == y.target) && (z.current == z.target));
+	return x.atTarget() && y.atTarget() && z.atTarget();
 }
 
 void CartesianBot::setupTimerInterrupt()

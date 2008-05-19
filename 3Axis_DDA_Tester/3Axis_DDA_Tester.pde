@@ -158,8 +158,13 @@ void loop()
 		bot.enableTimerInterrupt();
 	}
 	
-	//uncomment this if you want to find out what your status is.
-/*
+	Serial.print("Current: ");
+	Serial.print(bot.x.current);
+	Serial.print(" ");
+	Serial.print(bot.y.current);
+	Serial.print(" ");
+	Serial.println(bot.z.current);
+	
 	Serial.print("At min: ");
 	Serial.print(bot.x.atMin());
 	Serial.print(" ");
@@ -188,5 +193,5 @@ void loop()
 	Serial.print(" ");
 	Serial.println(bot.z.can_step);
 	delay(1000);
-*/	
+
 }

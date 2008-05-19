@@ -45,6 +45,17 @@ bool LinearAxis::atMax()
 	//return digitalRead(this->max_pin);
 }
 
+/*
+* Used for all axis, depending on stepper direction
+*/
+bool LinearAxis::atTarget()
+{
+	if (this->stepper.direction == RS_FORWARD)
+		return this->current >= this->target;
+	else
+		return this->current <= this->target;
+}
+
 void LinearAxis::doStep()
 {
 	//gotta call readState() before you can step again!

@@ -34,6 +34,7 @@ class LinearAxis {
 	void doStep();
 	bool atMin();
 	bool atMax();
+	bool atTarget();
 	
 	//various position things.
 	void setPosition(long position);
