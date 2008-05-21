@@ -1,6 +1,15 @@
-#ifdef EXTRUDER_ENCODER_ENABLED
-
 //these routines provide an easy interface for controlling timer1 interrupts
+
+//this handles the timer interrupt event
+SIGNAL(SIG_OUTPUT_COMPARE1A)
+{
+	//increment/decrement our error variable.
+	//the manage extruder function will handle the motor control
+	if (extruder_direction)
+		extruder_error--;
+	else
+		extruder_error++;
+}
 
 void enableTimer1Interrupt()
 {
@@ -159,5 +168,3 @@ void setupTimer1Interrupt()
 	setTimer1Resolution(4);
 	setTimer1Ceiling(65535);
 }
-
-#endif

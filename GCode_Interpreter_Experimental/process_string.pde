@@ -387,16 +387,14 @@ void process_string(char instruction[], int size)
 				extruder_set_cooler(0);
 			break;
 			
-			#ifdef EXTRUDER_ENCODER_ENABLED
-				//set extruder RPM
-				case 108:
-					extruder_rpm = (int)search_string('P', instruction, size);
-					extruder_delay = (960000000UL / EXTRUDER_ENCODER_STEPS) / extruder_rpm;
-					setTimer1Ticks(extruder_delay);
-					enableTimer1Interrupt();
-				break;
-			#endif
-			
+			//set extruder RPM
+			case 108:
+				extruder_rpm = (int)search_string('P', instruction, size);
+				extruder_delay = (960000000UL / EXTRUDER_ENCODER_STEPS) / extruder_rpm;
+				setTimer1Ticks(extruder_delay);
+				enableTimer1Interrupt();
+			break;
+
 			default:
 				Serial.print("Huh? M");
 				Serial.println(code);
