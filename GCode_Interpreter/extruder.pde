@@ -55,30 +55,6 @@ int last_extruder_error = 0;
 int extruder_error_delta = 0;
 bool extruder_direction = EXTRUDER_FORWARD;
 
-#ifdef EXTRUDER_ENCODER_ENABLED	
-	void extruder_read_quadrature()
-	{
-		// found a low-to-high on channel A
-		if (digitalRead(EXTRUDER_ENCODER_A_PIN) == HIGH)
-		{   
-			// check channel B to see which way
-			if (digitalRead(EXTRUDER_ENCODER_B_PIN) == LOW)
-				extruder_error--; // CCW
-			else
-				extruder_error++; //CW
-		}
-		// found a high-to-low on channel A
-		else
-		{
-			// check channel B to see which way
-			if (digitalRead(EXTRUDER_ENCODER_B_PIN) == LOW)
-				extruder_error++; //CW
-			else
-				extruder_error--; //CCW
-		}
-	}
-#endif
-
 void init_extruder()
 {
 	//default to room temp.
@@ -89,24 +65,6 @@ void init_extruder()
 	pinMode(EXTRUDER_MOTOR_SPEED_PIN, OUTPUT);
 	pinMode(EXTRUDER_HEATER_PIN, OUTPUT);
 	pinMode(EXTRUDER_FAN_PIN, OUTPUT);
-	
-#ifdef EXTRUDER_ENCODER_ENABLED	
-	//setup our encoder interrupt stuff.
-	//these pins are inputs
-	pinMode(EXTRUDER_ENCODER_A_PIN, INPUT);
-	pinMode(EXTRUDER_ENCODER_B_PIN, INPUT);
-
-	//turn on internal pullups
-	digitalWrite(EXTRUDER_ENCODER_A_PIN, HIGH);
-	digitalWrite(EXTRUDER_ENCODER_A_PIN, HIGH);
-	
-	//attach our interrupt handler
-	attachInterrupt(0, extruder_read_quadrature, CHANGE);
-
-	//setup our timer interrupt stuff
-	setupTimer1Interrupt();
-#endif
-
 }
 
 void extruder_set_direction(bool direction)
@@ -202,55 +160,6 @@ int extruder_sample_temperature(byte pin)
 	return raw;
 }
 
-#ifdef EXTRUDER_ENCODER_ENABLED
-	//this handles the timer interrupt code
-	SIGNAL(SIG_OUTPUT_COMPARE1A)
-	{
-		//increment/decrement our error variable.
-		//the manage extruder function will handle the motor control
-		if (extruder_direction)
-			extruder_error--;
-		else
-			extruder_error++;
-	}
-
-	void extruder_manage_speed()
-	{
-		//is our speed changing?
-		extruder_error_delta = last_extruder_error - extruder_error;
-		
-		//calculate our speed.
-		int speed = abs(extruder_error) / 4;
-		speed += extruder_error_delta;
-		
-		//do some bounds checking.
-		speed = max(speed, EXTRUDER_MIN_SPEED);
-		speed = min(speed, EXTRUDER_MAX_SPEED);
-
-		//temporary debug stuff.
-		Serial.print("e:");
-		Serial.print(extruder_error, DEC);
-		Serial.print(" s:");
-		Serial.println(speed);
-
-		//figure out which direction to move the motor
-		if (extruder_error > 0)
-			digitalWrite(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_REVERSE);
-		else if (extruder_error < 0)
-			digitalWrite(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_FORWARD);
-
-		//send us off at that speed!
-		if (abs(extruder_error) > EXTRUDER_ERROR_MARGIN)
-			analogWrite(EXTRUDER_MOTOR_SPEED_PIN, speed);
-		else
-			analogWrite(EXTRUDER_MOTOR_SPEED_PIN, 0);
-			
-		//save our last error.
-		last_extruder_error = extruder_error;
-	}
-#endif
-
-
 /*!
   Manages motor and heater based on measured temperature:
   o If temp is too low, don't start the motor
@@ -270,9 +179,5 @@ void extruder_manage_temperature()
 	//turn the heater off if we're above our max.
 	else
 		analogWrite(EXTRUDER_HEATER_PIN, 0);
-
-	#ifdef EXTRUDER_ENCODER_ENABLED
-		extruder_manage_speed();
-	#endif
 }
 

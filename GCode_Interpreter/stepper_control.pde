@@ -67,21 +67,6 @@ void dda_move(long micro_delay)
 	else
 		milli_delay = 0;
 
-/*	
-	Serial.print("max:");
-	Serial.println(max_delta, DEC);
-	Serial.print("xd:");
-	Serial.println(delta_steps.x, DEC);
-	Serial.print("yd:");
-	Serial.println(delta_steps.y, DEC);
-	Serial.print("zd:");
-	Serial.println(delta_steps.z, DEC);
-	
-	Serial.print("msec:");
-	Serial.println(millis, DEC);
-	Serial.print("usec:");
-	Serial.println(micro_delay, DEC);
-*/
 	//do our DDA line!
 	do
 	{

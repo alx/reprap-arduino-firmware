@@ -1,9 +1,8 @@
 // Arduino G-code Interpreter
 // v1.0 by Mike Ellery - initial software (mellery@gmail.com)
-// v1.1 by Zach Smith - cleaned up and did lots of tweaks (hoeken@gmail.com)
+// v1.1 by Zach Hoeken - cleaned up and did lots of tweaks (hoeken@gmail.com)
 // v1.2 by Chris Meighan - cleanup / G2&G3 support (cmeighan@gmail.com)
-// v1.3 by Zach Smith - added thermocouple support and multi-sample temp readings. (hoeken@gmail.com)
-//      also added preliminary and experimental support for rotary encoders.
+// v1.3 by Zach Hoeken - added thermocouple support and multi-sample temp readings. (hoeken@gmail.com)
 #include <HardwareSerial.h>
 
 //our command string
