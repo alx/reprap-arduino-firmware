@@ -41,19 +41,23 @@ short temptable[NUMTEMPS][2] = {
 #define EXTRUDER_REVERSE false
 
 //these our the default values for the extruder.
-int extruder_speed = 128;
 int extruder_target_celsius = 0;
 int extruder_max_celsius = 0;
 byte extruder_heater_low = 64;
 byte extruder_heater_high = 255;
 
 //this is for doing encoder based extruder control
+volatile bool extruder_direction = EXTRUDER_FORWARD;
+volatile int extruder_error = 0;
+
+//these keep track of extruder speed, etc.
 int extruder_rpm = 0;
 long extruder_delay = 0;
-int extruder_error = 0;
+
+//for our closed loop control
 int last_extruder_error = 0;
-int extruder_error_delta = 0;
-bool extruder_direction = EXTRUDER_FORWARD;
+int last_extruder_delta = 0;
+int last_extruder_speed = 0;
 
 void extruder_read_quadrature()
 {
@@ -82,11 +86,17 @@ void init_extruder()
 	//default to room temp.
 	extruder_set_temperature(21);
 	
-	//setup our 
+	//setup our pins
 	pinMode(EXTRUDER_MOTOR_DIR_PIN, OUTPUT);
 	pinMode(EXTRUDER_MOTOR_SPEED_PIN, OUTPUT);
 	pinMode(EXTRUDER_HEATER_PIN, OUTPUT);
 	pinMode(EXTRUDER_FAN_PIN, OUTPUT);
+	
+	//initialize values
+	digitalWrite(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_FORWARD);
+	analogWrite(EXTRUDER_FAN_PIN, 0);
+	analogWrite(EXTRUDER_HEATER_PIN, 0);
+	analogWrite(EXTRUDER_MOTOR_SPEED_PIN, 0);
 	
 	//setup our encoder interrupt stuff.
 	//these pins are inputs
@@ -103,17 +113,12 @@ void init_extruder()
 
 	//setup our timer interrupt stuff
 	setupTimer1Interrupt();
+	disableTimer1Interrupt();
 }
 
 void extruder_set_direction(bool direction)
 {
 	extruder_direction = direction;
-	digitalWrite(EXTRUDER_MOTOR_DIR_PIN, direction);
-}
-
-void extruder_set_speed(byte speed)
-{
-	analogWrite(EXTRUDER_MOTOR_SPEED_PIN, speed);
 }
 
 void extruder_set_cooler(byte speed)
@@ -201,21 +206,27 @@ int extruder_sample_temperature(byte pin)
 void extruder_manage_speed()
 {
 	//is our speed changing?
-	extruder_error_delta = last_extruder_error - extruder_error;
+	int extruder_error_delta = last_extruder_error - extruder_error;
+	int extruder_delta_delta = last_extruder_delta - extruder_error_delta;
+	int extruder_error_factor = abs(extruder_error) / 4;
 	
 	//calculate our speed.
-	int speed = abs(extruder_error) / 4;
+	int speed = last_extruder_speed; 
 	speed += extruder_error_delta;
+	speed += extruder_delta_delta;
+	speed += extruder_error_factor;
 	
 	//do some bounds checking.
 	speed = max(speed, EXTRUDER_MIN_SPEED);
 	speed = min(speed, EXTRUDER_MAX_SPEED);
 
 	//temporary debug stuff.
+/*
 	Serial.print("e:");
 	Serial.print(extruder_error, DEC);
 	Serial.print(" s:");
 	Serial.println(speed);
+*/
 
 	//figure out which direction to move the motor
 	if (extruder_error > 0)
@@ -231,6 +242,8 @@ void extruder_manage_speed()
 		
 	//save our last error.
 	last_extruder_error = extruder_error;
+	last_extruder_delta = extruder_error_delta;
+	last_extruder_speed = speed;
 }
 
 

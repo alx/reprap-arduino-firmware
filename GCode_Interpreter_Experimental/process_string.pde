@@ -336,24 +336,26 @@ void process_string(char instruction[], int size)
 	*/		
 			//set max extruder speed, 0-255 PWM
 			case 100:
-				extruder_speed = (int)(search_string('P', instruction, size));
+				extruder_rpm = (int)search_string('P', instruction, size);
+				extruder_delay = (960000000UL / EXTRUDER_ENCODER_STEPS) / extruder_rpm;
+				setTimer1Ticks(extruder_delay);
 			break;
 
 			//turn extruder on, forward
 			case 101:
 				extruder_set_direction(1);
-				extruder_set_speed(extruder_speed);
+				enableTimer1Interrupt();
 			break;
 
 			//turn extruder on, reverse
 			case 102:
 				extruder_set_direction(0);
-				extruder_set_speed(extruder_speed);
+				enableTimer1Interrupt();
 			break;
 
 			//turn extruder off
 			case 103:
-				extruder_set_speed(0);
+				disableTimer1Interrupt();
 			break;
 
 			//custom code for temperature control
@@ -385,14 +387,6 @@ void process_string(char instruction[], int size)
 			//turn fan off
 			case 107:
 				extruder_set_cooler(0);
-			break;
-			
-			//set extruder RPM
-			case 108:
-				extruder_rpm = (int)search_string('P', instruction, size);
-				extruder_delay = (960000000UL / EXTRUDER_ENCODER_STEPS) / extruder_rpm;
-				setTimer1Ticks(extruder_delay);
-				enableTimer1Interrupt();
 			break;
 
 			default:

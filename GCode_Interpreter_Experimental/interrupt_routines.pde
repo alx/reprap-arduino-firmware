@@ -5,7 +5,7 @@ SIGNAL(SIG_OUTPUT_COMPARE1A)
 {
 	//increment/decrement our error variable.
 	//the manage extruder function will handle the motor control
-	if (extruder_direction)
+	if (extruder_direction == EXTRUDER_FORWARD)
 		extruder_error--;
 	else
 		extruder_error++;
