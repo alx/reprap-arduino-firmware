@@ -60,11 +60,17 @@ void init_extruder()
 	//default to room temp.
 	extruder_set_temperature(21);
 	
-	//setup our 
+	//setup our pins
 	pinMode(EXTRUDER_MOTOR_DIR_PIN, OUTPUT);
 	pinMode(EXTRUDER_MOTOR_SPEED_PIN, OUTPUT);
 	pinMode(EXTRUDER_HEATER_PIN, OUTPUT);
 	pinMode(EXTRUDER_FAN_PIN, OUTPUT);
+	
+	//initialize values
+	digitalWrite(EXTRUDER_MOTOR_DIR_PIN, EXTRUDER_FORWARD);
+	analogWrite(EXTRUDER_FAN_PIN, 0);
+	analogWrite(EXTRUDER_HEATER_PIN, 0);
+	analogWrite(EXTRUDER_MOTOR_SPEED_PIN, 0);
 }
 
 void extruder_set_direction(bool direction)

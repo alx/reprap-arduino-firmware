@@ -11,6 +11,9 @@ int milli_delay;
 
 void init_steppers()
 {
+	//turn them off to start.
+	disable_steppers();
+	
 	//init our points.
 	current_units.x = 0.0;
 	current_units.y = 0.0;

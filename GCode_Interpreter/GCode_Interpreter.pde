@@ -62,5 +62,5 @@ void loop()
 
 	//no data?  turn off steppers
 	if (no_data > 1000)
-		disable_steppers();
+	  disable_steppers();
 }
