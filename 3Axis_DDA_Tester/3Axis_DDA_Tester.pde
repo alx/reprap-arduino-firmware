@@ -63,6 +63,7 @@ Point p;
 int max_speed = 100;
 int max_x = 800;
 int max_y = 800;
+int max_z = 200;
 
 SIGNAL(SIG_OUTPUT_COMPARE1A)
 {
@@ -91,7 +92,7 @@ void setup()
 	
 	bot.x.setMax(max_x);
 	bot.y.setMax(max_y);
-	bot.z.setMax(0);
+	bot.z.setMax(max_z);
 	
 	Serial.print("RPM: ");
 	Serial.println((int)bot.x.stepper.rpm);
@@ -100,17 +101,22 @@ void setup()
 
 	p.x = max_x;
 	p.y = max_y;
-	p.z = 0;
-	bot.queuePoint(p);
-
-	p.x = 0;
-	p.y = max_y;
-	p.z = 0;
+	p.z = max_z;
 	bot.queuePoint(p);
 	
 	p.x = max_x;
 	p.y = 0;
 	p.z = 0;
+	bot.queuePoint(p);
+	
+	p.x = 0;
+	p.y = max_y;
+	p.z = 0;
+	bot.queuePoint(p);
+	
+	p.x = 0;
+	p.y = 0;
+	p.z = max_z;
 	bot.queuePoint(p);
 
 	p.x = 0;
@@ -126,7 +132,7 @@ void loop()
 	{
 		p.x = random(0, max_x);
 		p.y = random(0, max_y);
-		p.z = 0;
+		p.z = random(0, max_z);;
 		bot.queuePoint(p);
 	}
 
