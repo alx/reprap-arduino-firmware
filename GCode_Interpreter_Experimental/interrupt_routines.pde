@@ -139,7 +139,7 @@ void setTimer1Ticks(unsigned long ticks)
 	// we also then calculate the timer ceiling required. (ie what the counter counts to)
 	// the result is the timer counts up to the appropriate time and then fires an interrupt.
 
-	disableTimer1Interrupt();
+	//disableTimer1Interrupt();
 	setTimer1Ceiling(getTimer1Ceiling(ticks));
 	setTimer1Resolution(getTimer1Resolution(ticks));
 }

@@ -59,26 +59,88 @@ int last_extruder_error = 0;
 int last_extruder_delta = 0;
 int last_extruder_speed = 0;
 
-void extruder_read_quadrature()
-{
-	// found a low-to-high on channel A
-	if (digitalRead(EXTRUDER_ENCODER_A_PIN) == HIGH)
-	{   
-		// check channel B to see which way
-		if (digitalRead(EXTRUDER_ENCODER_B_PIN) == LOW)
-			extruder_error--; // CCW
-		else
-			extruder_error++; //CW
-	}
-	// found a high-to-low on channel A
-	else
-	{
-		// check channel B to see which way
-		if (digitalRead(EXTRUDER_ENCODER_B_PIN) == LOW)
-			extruder_error++; //CW
-		else
-			extruder_error--; //CCW
-	}
+void extruder_read_quadrature_a()
+{  
+  // found a low-to-high on channel A
+  if (digitalRead(EXTRUDER_ENCODER_A_PIN) == HIGH)
+  {   
+    // check channel B to see which way
+    if (digitalRead(EXTRUDER_ENCODER_B_PIN) == LOW)
+    {
+      if (INVERT_QUADRATURE)
+        extruder_error--; 
+      else
+        extruder_error++;
+    }
+    else
+    {
+      if (INVERT_QUADRATURE)
+        extruder_error++;
+      else
+        extruder_error--;
+    }  
+  }
+  // found a high-to-low on channel A
+  else                                        
+  {
+    // check channel B to see which way
+    if (digitalRead(EXTRUDER_ENCODER_B_PIN) == LOW)
+    {
+      if (INVERT_QUADRATURE)
+        extruder_error++;
+      else
+        extruder_error--;
+    }
+    else
+    {
+      if (INVERT_QUADRATURE)
+        extruder_error--;
+      else
+        extruder_error++;
+    }  
+  }
+}
+
+void extruder_read_quadrature_b()
+{  
+  // found a low-to-high on channel A
+  if (digitalRead(EXTRUDER_ENCODER_B_PIN) == HIGH)
+  {   
+    // check channel B to see which way
+    if (digitalRead(EXTRUDER_ENCODER_A_PIN) == LOW)
+    {
+      if (INVERT_QUADRATURE)
+        extruder_error; 
+      else
+        extruder_error++;
+    }
+    else
+    {
+      if (INVERT_QUADRATURE)
+        extruder_error++;
+      else
+        extruder_error--;
+    }  
+  }
+  // found a high-to-low on channel A
+  else                                        
+  {
+    // check channel B to see which way
+    if (digitalRead(EXTRUDER_ENCODER_A_PIN) == LOW)
+    {
+      if (INVERT_QUADRATURE)
+        extruder_error--;
+      else
+        extruder_error++;
+    }
+    else
+    {
+      if (INVERT_QUADRATURE)
+        extruder_error++;
+      else
+        extruder_error--;
+    }  
+  }
 }
 
 void init_extruder()
@@ -108,8 +170,8 @@ void init_extruder()
 	digitalWrite(EXTRUDER_ENCODER_A_PIN, HIGH);
 	
 	//attach our interrupt handlers
-	attachInterrupt(0, extruder_read_quadrature, CHANGE);
-	attachInterrupt(1, extruder_read_quadrature, CHANGE);
+	attachInterrupt(0, extruder_read_quadrature_a, CHANGE);
+	attachInterrupt(1, extruder_read_quadrature_b, CHANGE);
 
 	//setup our timer interrupt stuff
 	setupTimer1Interrupt();
@@ -206,27 +268,36 @@ int extruder_sample_temperature(byte pin)
 void extruder_manage_speed()
 {
 	//is our speed changing?
-	int extruder_error_delta = last_extruder_error - extruder_error;
+	int extruder_error_delta = abs(last_extruder_error) - abs(extruder_error);
 	int extruder_delta_delta = last_extruder_delta - extruder_error_delta;
-	int extruder_error_factor = abs(extruder_error) / 4;
+	int extruder_error_factor = abs(extruder_error) / 2;
 	
 	//calculate our speed.
-	int speed = last_extruder_speed; 
-	speed += extruder_error_delta;
-	speed += extruder_delta_delta;
+	int speed = 0;
 	speed += extruder_error_factor;
-	
+        speed += last_extruder_speed / 2;
+	speed += extruder_error_delta * 2;
+	speed += extruder_delta_delta * 2;
+       
+        //why not average speeds?
+        speed = (speed + last_extruder_speed) / 2;
+
 	//do some bounds checking.
 	speed = max(speed, EXTRUDER_MIN_SPEED);
 	speed = min(speed, EXTRUDER_MAX_SPEED);
 
 	//temporary debug stuff.
-/*
-	Serial.print("e:");
-	Serial.print(extruder_error, DEC);
-	Serial.print(" s:");
-	Serial.println(speed);
-*/
+	if (false && random(500) == 1)
+	{
+		Serial.print("e:");
+		Serial.print(extruder_error, DEC);
+		Serial.print(" d:");
+		Serial.print(extruder_error_delta, DEC);
+		Serial.print(" dd:");
+		Serial.print(extruder_delta_delta, DEC);
+		Serial.print(" s:");
+		Serial.println(speed);
+	}
 
 	//figure out which direction to move the motor
 	if (extruder_error > 0)

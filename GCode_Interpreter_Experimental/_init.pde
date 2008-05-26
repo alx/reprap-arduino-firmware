@@ -29,11 +29,10 @@
 
 //these defines are for using rotary encoders on the extruder
 #define EXTRUDER_ENCODER_STEPS 1024		//number of steps per revolution
-#define EXTRUDER_ENCODER_A_PIN 2		//quadrature a pin
-#define EXTRUDER_ENCODER_B_PIN 3		//quadrature b pin
 #define EXTRUDER_MIN_SPEED 50			//minimum PWM speed to use
 #define EXTRUDER_MAX_SPEED 255			//maximum PWM speed to use
-#define EXTRUDER_ERROR_MARGIN 2			//our error margin (to prevent constant seeking)
+#define EXTRUDER_ERROR_MARGIN 10		//our error margin (to prevent constant seeking)
+#define INVERT_QUADRATURE			0 // 1 = inverted, 0 = not inverted
 
 /****************************************************************************************
 * digital i/o pin assignment
@@ -61,9 +60,11 @@
 #define Z_ENABLE_PIN 18
 
 //extruder pins
+#define EXTRUDER_ENCODER_A_PIN 2		//quadrature a pin
+#define EXTRUDER_ENCODER_B_PIN 3		//quadrature b pin
 #define EXTRUDER_MOTOR_DIR_PIN     4
 #define EXTRUDER_MOTOR_SPEED_PIN   5
 #define EXTRUDER_HEATER_PIN        6
 #define EXTRUDER_FAN_PIN           11
-#define EXTRUDER_THERMISTOR_PIN    6  //a -1 disables thermistor readings
+#define EXTRUDER_THERMISTOR_PIN    5  //a -1 disables thermistor readings
 #define EXTRUDER_THERMOCOUPLE_PIN  -1 //a -1 disables thermocouple readings
