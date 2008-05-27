@@ -14,7 +14,7 @@ echo "Exporting files..."
 svn export Single_Arduino_SNAP "$TO_DIR/snap/Single_Arduino_SNAP"
 svn export 3Axis_SNAP "$TO_DIR/snap/3Axis_SNAP"
 svn export Extruder_SNAP "$TO_DIR/snap/Extruder_SNAP"
-svn export ../library "$TO_DIR/library"
+svn export library "$TO_DIR/library"
 svn export GCode_Interpreter "$TO_DIR/gcode/GCode_Interpreter"
 svn export GCode_Interpreter_Experimental "$TO_DIR/gcode/GCode_Interpreter_Experimental"
 
