@@ -28,7 +28,7 @@
 #define TEMPERATURE_SAMPLES 5
 
 //these defines are for using rotary encoders on the extruder
-#define EXTRUDER_ENCODER_STEPS 1024		//number of steps per revolution
+#define EXTRUDER_ENCODER_STEPS 512		//number of steps per revolution
 #define EXTRUDER_MIN_SPEED 50			//minimum PWM speed to use
 #define EXTRUDER_MAX_SPEED 255			//maximum PWM speed to use
 #define EXTRUDER_ERROR_MARGIN 10		//our error margin (to prevent constant seeking)

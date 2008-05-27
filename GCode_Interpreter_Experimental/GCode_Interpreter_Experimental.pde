@@ -4,6 +4,7 @@
 // v1.2 by Chris Meighan - cleanup / G2&G3 support (cmeighan@gmail.com)
 // v1.3 by Zach Smith - added thermocouple support and multi-sample temp readings. (hoeken@gmail.com)
 //      also added preliminary and experimental support for rotary encoders.
+
 #include <HardwareSerial.h>
 
 //our command string

@@ -59,7 +59,7 @@ int last_extruder_error = 0;
 int last_extruder_delta = 0;
 int last_extruder_speed = 0;
 
-void extruder_read_quadrature_a()
+void extruder_read_quadrature()
 {  
   // found a low-to-high on channel A
   if (digitalRead(EXTRUDER_ENCODER_A_PIN) == HIGH)
@@ -101,48 +101,6 @@ void extruder_read_quadrature_a()
   }
 }
 
-void extruder_read_quadrature_b()
-{  
-  // found a low-to-high on channel A
-  if (digitalRead(EXTRUDER_ENCODER_B_PIN) == HIGH)
-  {   
-    // check channel B to see which way
-    if (digitalRead(EXTRUDER_ENCODER_A_PIN) == LOW)
-    {
-      if (INVERT_QUADRATURE)
-        extruder_error; 
-      else
-        extruder_error++;
-    }
-    else
-    {
-      if (INVERT_QUADRATURE)
-        extruder_error++;
-      else
-        extruder_error--;
-    }  
-  }
-  // found a high-to-low on channel A
-  else                                        
-  {
-    // check channel B to see which way
-    if (digitalRead(EXTRUDER_ENCODER_A_PIN) == LOW)
-    {
-      if (INVERT_QUADRATURE)
-        extruder_error--;
-      else
-        extruder_error++;
-    }
-    else
-    {
-      if (INVERT_QUADRATURE)
-        extruder_error++;
-      else
-        extruder_error--;
-    }  
-  }
-}
-
 void init_extruder()
 {
 	//default to room temp.
@@ -170,8 +128,7 @@ void init_extruder()
 	digitalWrite(EXTRUDER_ENCODER_A_PIN, HIGH);
 	
 	//attach our interrupt handlers
-	attachInterrupt(0, extruder_read_quadrature_a, CHANGE);
-	attachInterrupt(1, extruder_read_quadrature_b, CHANGE);
+	attachInterrupt(0, extruder_read_quadrature, CHANGE);
 
 	//setup our timer interrupt stuff
 	setupTimer1Interrupt();
